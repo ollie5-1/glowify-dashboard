@@ -1,5 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
+const pkg = require("./package.json");
 
 /**
  * Single-file bundle, zoals de mushroom-strategy referentie.
@@ -28,6 +29,12 @@ module.exports = {
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({
       maxChunks: 1,
+    }),
+    // Injecteert versienummer en build-tijdstip in de bundle, zodat de
+    // console-log op de demo toont welke bundle er echt draait.
+    new webpack.DefinePlugin({
+      __GLOWIFY_VERSION__: JSON.stringify(pkg.version),
+      __GLOWIFY_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     }),
   ],
   performance: {

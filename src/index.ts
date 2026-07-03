@@ -88,13 +88,16 @@ if (!window.customStrategies.some((s) => s.type === STRATEGY_TYPE)) {
   });
 }
 
-// Vriendelijke console-melding, zoals gangbaar bij HA frontend-resources.
-const version = "0.1.0";
+// Duidelijke console-melding zodat op de demo te verifiëren is welke bundle
+// er echt draait (versienummer + build-tijdstip).
+const version = typeof __GLOWIFY_VERSION__ !== "undefined" ? __GLOWIFY_VERSION__ : "dev";
+const buildTime = typeof __GLOWIFY_BUILD_TIME__ !== "undefined" ? __GLOWIFY_BUILD_TIME__ : "onbekend";
 // eslint-disable-next-line no-console
 console.info(
-  `%c GLOWIFY-DASHBOARD %c ${version} `,
-  "color: white; background: #EC7622; font-weight: 700;",
-  "color: #EC7622; background: #1c1c1c; font-weight: 700;",
+  `%c GLOWIFY DASHBOARD %c v${version} %c build ${buildTime} `,
+  "color: white; background: #EC7622; font-weight: 700; border-radius: 4px 0 0 4px; padding: 2px 6px;",
+  "color: #EC7622; background: #1c1c1c; font-weight: 700; padding: 2px 6px;",
+  "color: #8E2F89; background: #f2f2f2; font-weight: 600; border-radius: 0 4px 4px 0; padding: 2px 6px;",
 );
 
 export { GlowifyStrategy };

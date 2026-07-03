@@ -16,6 +16,18 @@ import type {
   LabelRegistryEntry,
 } from "../src/types/homeassistant";
 
+// localStorage-stub zodat de bewerkmodus (editMode) getest kan worden in node.
+const _ls: Record<string, string> = {};
+(globalThis as unknown as { localStorage: unknown }).localStorage = {
+  getItem: (k: string) => (k in _ls ? _ls[k] : null),
+  setItem: (k: string, v: string) => {
+    _ls[k] = String(v);
+  },
+  removeItem: (k: string) => {
+    delete _ls[k];
+  },
+};
+
 let failures = 0;
 function ok(cond: boolean, msg: string): void {
   if (cond) {
@@ -118,13 +130,9 @@ const hass: HomeAssistant = {
 };
 
 async function main(): Promise<void> {
-  // Kern-checks met de editor-extra's uit, zodat de sub-knop-volgorde puur is.
-  const baseOptions: GlowifyStrategyOptions = {
-    title: "Glowify",
-    plus_on_bars: false,
-    show_plus_chip: false,
-    show_cleanup_chip: false,
-  };
+  // Bewerkmodus standaard uit → geen plus/opruim, zuivere sub-knop-volgorde.
+  _ls["glowify_edit_mode"] = "0";
+  const baseOptions: GlowifyStrategyOptions = { title: "Glowify" };
   const config = { strategy: { type: "custom:glowify", options: baseOptions } };
   const result = await GlowifyStrategy.generate(config, hass);
 
@@ -250,19 +258,35 @@ async function main(): Promise<void> {
   ok(JSON.stringify(toggleVerbergLabel(["x"], "vb", true)) === '["x","vb"]', "verberg-label toevoegen");
   ok(JSON.stringify(toggleVerbergLabel(["x", "vb"], "vb", false)) === '["x"]', "verberg-label verwijderen");
 
-  console.log("== Editor-chips en plus-sub-knop (Fase 4) ==");
+  console.log("== Bewerkmodus UIT (UX-1) ==");
+  const chips1 = (cards[0] as any).chips;
+  ok(chips1.some((c: any) => c.icon === "mdi:pencil"), "potlood-chip altijd zichtbaar");
+  const pencilOff = chips1.find((c: any) => c.icon === "mdi:pencil");
+  ok(pencilOff.icon_color === "grey", "potlood grijs wanneer bewerkmodus uit");
+  ok(!chips1.some((c: any) => c.icon === "mdi:plus"), "geen plus-chip wanneer bewerkmodus uit");
+  ok(!chips1.some((c: any) => c.icon === "mdi:broom"), "geen opruim-chip wanneer bewerkmodus uit");
+  ok(woonkamer.sub_button[0].entity === "binary_sensor.woonkamer_beweging", "geen plus-sub-knop wanneer bewerkmodus uit");
+
+  console.log("== Bewerkmodus AAN (UX-1) ==");
+  _ls["glowify_edit_mode"] = "1";
   const res2 = await GlowifyStrategy.generate(
     { strategy: { options: { title: "Glowify" } } },
     hass,
   );
   const chips2 = (res2.views[0].cards![0] as any).chips;
-  ok(chips2.some((c: any) => c.icon === "mdi:plus"), "plus-chip in de chips-rij");
-  ok(chips2.some((c: any) => c.icon === "mdi:broom"), "opruim-chip in de chips-rij");
+  const pencilOn = chips2.find((c: any) => c.icon === "mdi:pencil");
+  ok(pencilOn.icon_color === "purple", "potlood paars wanneer bewerkmodus aan");
+  ok(chips2.some((c: any) => c.icon === "mdi:plus"), "plus-chip verschijnt in bewerkmodus");
+  ok(chips2.some((c: any) => c.icon === "mdi:broom"), "opruim-chip verschijnt in bewerkmodus");
   const plusChip = chips2.find((c: any) => c.icon === "mdi:plus");
   ok(
     plusChip.tap_action.action === "fire-dom-event" &&
       plusChip.tap_action.browser_mod.data.content.type === "custom:glowify-plus-editor",
     "plus-chip opent de plusknop-editor",
+  );
+  ok(
+    pencilOn.tap_action.action === "fire-dom-event" && pencilOn.tap_action.glowify_edit_toggle === true,
+    "potlood-chip toggelt via fire-dom-event",
   );
   const stacks2 = res2.views[0].cards!.filter((c: any) => c.type === "vertical-stack");
   const wk2 = (stacks2.find((s: any) => s.cards[0].name === "Gelijkvloers") as any).cards.find((c: any) => c.name === "Woonkamer");
@@ -275,6 +299,7 @@ async function main(): Promise<void> {
   );
   // Beweging is nu doorgeschoven naar index 2 (achter de plus).
   ok(wk2.styles.includes(".bubble-sub-button-2 { display:"), "styles-indices verschuiven correct mee met de plus");
+  _ls["glowify_edit_mode"] = "0";
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

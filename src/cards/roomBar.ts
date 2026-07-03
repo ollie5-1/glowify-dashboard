@@ -37,14 +37,16 @@ interface SubButton {
 export function buildRoomBar(
   reg: GlowifyRegistry,
   room: RoomModel,
+  editMode: boolean,
   detected?: RoomEntities,
 ): LovelaceCardConfig {
   const ent = detected ?? detectRoomEntities(reg, room);
   const subButtons: SubButton[] = [];
   const styleLines: string[] = [];
 
-  // 0. Plus-knopje (uiterst links): opent de plusknop-editor voor deze kamer.
-  if (reg.options.plus_on_bars !== false) {
+  // 0. Plus-knopje (uiterst links): enkel in de bewerkmodus. Opent de
+  //    plusknop-editor voor deze kamer.
+  if (editMode && reg.options.plus_on_bars !== false) {
     subButtons.push(buildPlusSubButton(room.areaId, room.name));
   }
 

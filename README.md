@@ -87,6 +87,10 @@ strategy:
 
 ## Kernfeatures
 
+- **Bewerkmodus** — standaard toont het dashboard enkel bediening. Een subtiel
+  grijs potlood-chipje bovenaan zet de bewerkmodus aan (het kleurt paars): dan
+  verschijnen de plusjes op de kamerbalken en de plus- en opruim-chip. De stand
+  wordt per browser onthouden (localStorage).
 - **Plusknop-editor** — een plusje in de chips-rij en op elke kamerbalk opent
   een dialoog (icoon, kleur, tekst, actie). De toevoeging wordt via de
   lovelace-API in de strategie-opties bewaard, waarna het dashboard zichzelf

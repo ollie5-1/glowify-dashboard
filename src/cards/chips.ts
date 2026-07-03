@@ -1,5 +1,5 @@
 import { GlowifyRegistry } from "../registry";
-import { buildCleanupChip, buildPlusChip } from "../features/editorChips";
+import { buildCleanupChip, buildPencilChip, buildPlusChip } from "../features/editorChips";
 import type { ExtraChip } from "../types/options";
 import type { LovelaceCardConfig } from "../types/homeassistant";
 
@@ -11,6 +11,7 @@ import type { LovelaceCardConfig } from "../types/homeassistant";
 export function buildChipsCard(
   reg: GlowifyRegistry,
   lightGroups: string[],
+  editMode: boolean,
 ): LovelaceCardConfig {
   const prefix = reg.options.light_group_prefix ?? "verlichting_";
   const chips: LovelaceCardConfig[] = [];
@@ -46,9 +47,14 @@ export function buildChipsCard(
     chips.push(buildExtraChip(extra));
   }
 
-  // Editor-chips: plusknop-editor en opruimmodus.
-  if (reg.options.show_plus_chip !== false) chips.push(buildPlusChip());
-  if (reg.options.show_cleanup_chip !== false) chips.push(buildCleanupChip());
+  // Potlood-chip: altijd zichtbaar (subtiel), schakelt de bewerkmodus.
+  chips.push(buildPencilChip(editMode));
+
+  // Editor-chips verschijnen enkel in de bewerkmodus.
+  if (editMode) {
+    if (reg.options.show_plus_chip !== false) chips.push(buildPlusChip());
+    if (reg.options.show_cleanup_chip !== false) chips.push(buildCleanupChip());
+  }
 
   return {
     type: "custom:mushroom-chips-card",

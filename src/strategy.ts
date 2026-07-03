@@ -1,6 +1,7 @@
 import { GlowifyRegistry } from "./registry";
 import { buildFloorModel } from "./model/floorModel";
 import { buildHomeView } from "./views/homeView";
+import { isEditMode } from "./features/editMode";
 import type {
   DashboardStrategyInfo,
   HomeAssistant,
@@ -36,7 +37,7 @@ export class GlowifyStrategy {
   ): Promise<LovelaceConfig> {
     const reg = await GlowifyRegistry.create(hass, rawOptions);
     const floors = buildFloorModel(reg);
-    const homeView = buildHomeView(reg, floors);
+    const homeView = buildHomeView(reg, floors, isEditMode());
 
     return {
       title: reg.options.title ?? "Glowify",

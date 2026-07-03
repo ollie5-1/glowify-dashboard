@@ -2,6 +2,7 @@ import { GlowifyStrategy } from "./strategy";
 import { GlowifyPlusEditor } from "./features/plusEditor";
 import { GlowifyCleanup } from "./features/cleanupMode";
 import { GlowifyStrategyEditor } from "./features/configEditor";
+import { installEditModeListener } from "./features/editMode";
 
 /**
  * Registratie van de Glowify dashboard-strategie.
@@ -71,6 +72,9 @@ declare global {
     customStrategies?: CustomStrategyRegistration[];
   }
 }
+
+// Globale listener voor de bewerkmodus-toggle (potlood-chip).
+installEditModeListener();
 
 window.customStrategies = window.customStrategies || [];
 if (!window.customStrategies.some((s) => s.type === STRATEGY_TYPE)) {

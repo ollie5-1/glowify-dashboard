@@ -16,6 +16,7 @@ import type { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassist
 export function buildHomeView(
   reg: GlowifyRegistry,
   floors: FloorModel[],
+  editMode: boolean,
 ): LovelaceViewConfig {
   const cards: LovelaceCardConfig[] = [];
   const lightGroups: string[] = [];
@@ -35,13 +36,13 @@ export function buildHomeView(
     for (const room of floor.rooms) {
       const ent = detectRoomEntities(reg, room);
       if (ent.lightGroup) lightGroups.push(ent.lightGroup);
-      stack.push(buildRoomBar(reg, room, ent));
+      stack.push(buildRoomBar(reg, room, editMode, ent));
     }
     floorBlocks.push({ type: "vertical-stack", cards: stack });
   }
 
   // Chips-rij vooraan (heeft de verzamelde lichtgroepen nodig).
-  cards.push(buildChipsCard(reg, lightGroups));
+  cards.push(buildChipsCard(reg, lightGroups, editMode));
   cards.push(...floorBlocks);
 
   // Kamer-pop-ups achteraan (één per kamer, aangesproken via de hash).

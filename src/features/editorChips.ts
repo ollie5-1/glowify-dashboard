@@ -1,3 +1,4 @@
+import { editToggleAction } from "./editMode";
 import type { GlowifyAction } from "../types/options";
 import type { LovelaceCardConfig } from "../types/homeassistant";
 
@@ -16,6 +17,20 @@ export function openCardPopupAction(
       service: "browser_mod.popup",
       data: { title, content: card },
     },
+  };
+}
+
+/**
+ * Potlood-chip: subtiel grijs, tik zet de bewerkmodus aan/uit. Kleurt paars
+ * wanneer de bewerkmodus actief is.
+ */
+export function buildPencilChip(editMode: boolean): LovelaceCardConfig {
+  return {
+    type: "template",
+    icon: "mdi:pencil",
+    icon_color: editMode ? "purple" : "grey",
+    content: "",
+    tap_action: editToggleAction(),
   };
 }
 

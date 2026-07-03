@@ -91,4 +91,10 @@ export interface GlowifyStrategyOptions {
   manual_floors?: ManualFloor[];
   /** area_id's die volledig verborgen moeten blijven. */
   hidden_areas?: string[];
+  /** Toon het plus-chip in de chips-rij (plusknop-editor). Default true. */
+  show_plus_chip?: boolean;
+  /** Toon het opruim-chip in de chips-rij (opruimmodus). Default true. */
+  show_cleanup_chip?: boolean;
+  /** Toon een plusknopje op elke kamerbalk. Default true. */
+  plus_on_bars?: boolean;
 }

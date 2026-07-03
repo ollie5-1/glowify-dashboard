@@ -4,6 +4,8 @@
  * pure asserts zodat het met `node build-test/test/smoke.js` draait.
  */
 import { GlowifyStrategy } from "../src/strategy";
+import { addExtraChip, addExtraSubButton, toggleVerbergLabel } from "../src/features/pure";
+import type { GlowifyStrategyOptions } from "../src/types/options";
 import type {
   AreaRegistryEntry,
   DeviceRegistryEntry,
@@ -116,7 +118,14 @@ const hass: HomeAssistant = {
 };
 
 async function main(): Promise<void> {
-  const config = { strategy: { type: "custom:glowify", options: { title: "Glowify" } } };
+  // Kern-checks met de editor-extra's uit, zodat de sub-knop-volgorde puur is.
+  const baseOptions: GlowifyStrategyOptions = {
+    title: "Glowify",
+    plus_on_bars: false,
+    show_plus_chip: false,
+    show_cleanup_chip: false,
+  };
+  const config = { strategy: { type: "custom:glowify", options: baseOptions } };
   const result = await GlowifyStrategy.generate(config, hass);
 
   console.log("== Structuur ==");
@@ -229,6 +238,43 @@ async function main(): Promise<void> {
   ok(Boolean(instel), "scene-instellingen pop-up bestaat");
   const instelEntities = instel.cards[0].entities;
   ok(instelEntities?.length === 8, "acht scene-schuifjes in de instellingen");
+
+  console.log("== Pure editor-logica (Fase 4) ==");
+  const o1 = addExtraChip({}, { icon: "mdi:cat", content: "Kat" });
+  ok(o1.extra_chips?.length === 1 && o1.extra_chips[0].icon === "mdi:cat", "addExtraChip voegt chip toe");
+  const o2 = addExtraSubButton({}, "zolder", { entity: "input_button.velux", icon: "mdi:cat" });
+  ok(o2.rooms?.zolder?.extra_sub_buttons?.[0].entity === "input_button.velux", "addExtraSubButton in juiste kamer");
+  const o3 = addExtraSubButton(o2, "zolder", { icon: "mdi:star" });
+  ok(o3.rooms?.zolder?.extra_sub_buttons?.length === 2, "sub-knopjes stapelen per kamer");
+  ok(JSON.stringify(o2).length > 0 && o2.rooms?.zolder?.extra_sub_buttons?.length === 1, "originele opties onaangetast (immutabel)");
+  ok(JSON.stringify(toggleVerbergLabel(["x"], "vb", true)) === '["x","vb"]', "verberg-label toevoegen");
+  ok(JSON.stringify(toggleVerbergLabel(["x", "vb"], "vb", false)) === '["x"]', "verberg-label verwijderen");
+
+  console.log("== Editor-chips en plus-sub-knop (Fase 4) ==");
+  const res2 = await GlowifyStrategy.generate(
+    { strategy: { options: { title: "Glowify" } } },
+    hass,
+  );
+  const chips2 = (res2.views[0].cards![0] as any).chips;
+  ok(chips2.some((c: any) => c.icon === "mdi:plus"), "plus-chip in de chips-rij");
+  ok(chips2.some((c: any) => c.icon === "mdi:broom"), "opruim-chip in de chips-rij");
+  const plusChip = chips2.find((c: any) => c.icon === "mdi:plus");
+  ok(
+    plusChip.tap_action.action === "fire-dom-event" &&
+      plusChip.tap_action.browser_mod.data.content.type === "custom:glowify-plus-editor",
+    "plus-chip opent de plusknop-editor",
+  );
+  const stacks2 = res2.views[0].cards!.filter((c: any) => c.type === "vertical-stack");
+  const wk2 = (stacks2.find((s: any) => s.cards[0].name === "Gelijkvloers") as any).cards.find((c: any) => c.name === "Woonkamer");
+  const plusSub = wk2.sub_button[0];
+  ok(plusSub.icon === "mdi:plus" && plusSub.entity === undefined, "plus-sub-knop uiterst links op de kamerbalk");
+  ok(
+    plusSub.tap_action.browser_mod.data.content.mode === "sub_button" &&
+      plusSub.tap_action.browser_mod.data.content.area === "woonkamer",
+    "plus-sub-knop richt zich op de juiste kamer",
+  );
+  // Beweging is nu doorgeschoven naar index 2 (achter de plus).
+  ok(wk2.styles.includes(".bubble-sub-button-2 { display:"), "styles-indices verschuiven correct mee met de plus");
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

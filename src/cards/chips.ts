@@ -1,4 +1,5 @@
 import { GlowifyRegistry } from "../registry";
+import { buildCleanupChip, buildPlusChip } from "../features/editorChips";
 import type { ExtraChip } from "../types/options";
 import type { LovelaceCardConfig } from "../types/homeassistant";
 
@@ -44,6 +45,10 @@ export function buildChipsCard(
   for (const extra of reg.options.extra_chips ?? []) {
     chips.push(buildExtraChip(extra));
   }
+
+  // Editor-chips: plusknop-editor en opruimmodus.
+  if (reg.options.show_plus_chip !== false) chips.push(buildPlusChip());
+  if (reg.options.show_cleanup_chip !== false) chips.push(buildCleanupChip());
 
   return {
     type: "custom:mushroom-chips-card",

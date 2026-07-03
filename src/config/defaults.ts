@@ -13,4 +13,7 @@ export const ConfigurationDefaults: GlowifyStrategyOptions = {
   floors: {},
   manual_floors: [],
   hidden_areas: [],
+  show_plus_chip: true,
+  show_cleanup_chip: true,
+  plus_on_bars: true,
 };

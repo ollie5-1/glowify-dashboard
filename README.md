@@ -9,9 +9,9 @@ Waar de vroegere aanpak een handgeschreven YAML-sjabloon per woning vroeg,
 bouwt deze strategie alles dynamisch op. Elk nieuw toestel in de juiste Area
 verschijnt vanzelf.
 
-> Status: **Fase 0** — skelet, registratie en verpakking. De kamerbalken
-> (Fase 1), pop-ups (Fase 2), snelpanelen (Fase 3) en editor/opruimmodus
-> (Fase 4) volgen stapsgewijs.
+> Status: **volledig** — Thuis-view en kamerbalken (Fase 1), zelfvullende
+> kamer-pop-ups (Fase 2), snelpanelen en scenes (Fase 3), plusknop-editor,
+> opruimmodus en optieschema (Fase 4).
 
 ## Vereisten
 
@@ -62,6 +62,9 @@ Alle opties zijn optioneel; standaard werkt de strategie zonder configuratie.
 | `rooms` | Per-kamer: `hidden`, `order`, `icon`, `name`, `extra_sub_buttons`, … |
 | `hidden_areas` | Lijst van area_id's om volledig te verbergen |
 | `extra_chips` | Extra chips bovenaan de Thuis-view |
+| `show_plus_chip` | Plus-chip in de chips-rij (plusknop-editor). Default `true` |
+| `show_cleanup_chip` | Opruim-chip in de chips-rij (opruimmodus). Default `true` |
+| `plus_on_bars` | Plusknopje op elke kamerbalk. Default `true` |
 
 Voorbeeld met een handmatige verdiepingsindeling:
 
@@ -81,6 +84,17 @@ strategy:
       berging:
         hidden: true
 ```
+
+## Kernfeatures
+
+- **Plusknop-editor** — een plusje in de chips-rij en op elke kamerbalk opent
+  een dialoog (icoon, kleur, tekst, actie). De toevoeging wordt via de
+  lovelace-API in de strategie-opties bewaard, waarna het dashboard zichzelf
+  vernieuwt.
+- **Opruimmodus** — het bezem-chip opent een beheerlijst waarin je elk toestel
+  het label `verberg` geeft (of terugdraait) via de websocket-API. Verborgen
+  toestellen verdwijnen overal uit het dashboard.
+- **Kleurtaal** — iconen en kleuren wisselen dynamisch mee met de status.
 
 ## Ontwikkelen
 

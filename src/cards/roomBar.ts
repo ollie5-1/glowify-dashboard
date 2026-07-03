@@ -12,6 +12,7 @@ import {
 } from "../kleurtaal";
 import { lightOffAction } from "./lightAction";
 import { buildLightPanelAction } from "../scenes";
+import { buildPlusSubButton } from "../features/editorChips";
 import type { LovelaceCardConfig } from "../types/homeassistant";
 
 interface SubButton {
@@ -41,6 +42,11 @@ export function buildRoomBar(
   const ent = detected ?? detectRoomEntities(reg, room);
   const subButtons: SubButton[] = [];
   const styleLines: string[] = [];
+
+  // 0. Plus-knopje (uiterst links): opent de plusknop-editor voor deze kamer.
+  if (reg.options.plus_on_bars !== false) {
+    subButtons.push(buildPlusSubButton(room.areaId, room.name));
+  }
 
   // 1. Bewegingsindicator (uiterst links), zonder achtergrondcirkel.
   if (ent.motion) {

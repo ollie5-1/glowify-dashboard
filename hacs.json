@@ -1,0 +1,6 @@
+{
+  "name": "Glowify Dashboard",
+  "render_readme": true,
+  "filename": "glowify-dashboard.js",
+  "homeassistant": "2026.5.0"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "glowify-dashboard",
+  "version": "0.1.0",
+  "description": "Glowify Dashboard — een custom Home Assistant dashboard-strategie van Glowify die de Thuis-view, kamerbalken en pop-ups dynamisch genereert uit Areas, floors en entiteiten.",
+  "author": "Glowify",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "deepmerge": "^4.3.1"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.4",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

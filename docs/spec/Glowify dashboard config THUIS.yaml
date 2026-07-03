@@ -1,0 +1,1548 @@
+# Glowify dashboard config THUIS
+# Volledige strategie-config voor het Glowify-dashboard op de thuisinstallatie van Olivier.
+# Gebruik: alles selecteren (Ctrl+A), kopieren, en plakken in:
+# Glowify-dashboard > potlood > drie puntjes > Ruwe configuratie-editor (alles wissen, dit plakken)
+# Vereist: de Glowify-blokken in configuration.yaml (lichtgroepen, scripts, schuifjes), browser_mod en auto-entities
+# Opruimen: geef een entiteit het label 'verberg' om ze uit de pop-ups te houden; zet ze op Verborgen voor de automatische views
+# Versie: 2026-07-03c (Berging zonder lichtgroep, ledbox is geen lamp)
+
+strategy:
+  type: custom:mushroom-strategy
+  options:
+    views:
+      home:
+        hidden: true
+    extra_views:
+      - title: Thuis
+        path: glowify-thuis
+        icon: mdi:home-heart
+        order: 0
+        badges: []
+        cards:
+          - type: custom:mushroom-chips-card
+            alignment: center
+            chips:
+              - type: template
+                icon: mdi:lightbulb-group
+                icon_color: >-
+                  {{ 'orange' if states.light | selectattr('entity_id', 'search', 'verlichting_') | selectattr('state', 'eq', 'on') | list | count > 0 else 'grey' }}
+                content: >-
+                  {{ states.light | selectattr('entity_id', 'search', 'verlichting_') | selectattr('state', 'eq', 'on') | list | count }} kamers verlicht
+                tap_action:
+                  action: call-service
+                  service: light.turn_off
+                  target:
+                    entity_id:
+                      - light.verlichting_inkomhal
+                      - light.verlichting_woonkamer
+                      - light.verlichting_office_sumato
+                      - light.verlichting_tuin
+                      - light.verlichting_hal_1e_verdiep
+                      - light.verlichting_bureau_ruimte
+                      - light.verlichting_master_bedroom
+                      - light.verlichting_badkamer
+                      - light.verlichting_keuken
+                      - light.verlichting_zolder_hal
+                      - light.verlichting_zolder
+              - type: template
+                icon: mdi:tune
+                icon_color: purple
+                content: Scenes
+                tap_action:
+                  action: navigate
+                  navigation_path: '#instellingen'
+          - type: vertical-stack
+            cards:
+              - type: custom:bubble-card
+                card_type: separator
+                name: Gelijkvloers
+                icon: mdi:home-floor-0
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.bewegingssensor_inkomhal_temperature
+                name: Inkomhal
+                icon: mdi:door
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#inkomhal'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/inkomhal
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#inkomhal'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/inkomhal
+                styles: |
+                  .bubble-sub-button-1 { display: ${hass.states['binary_sensor.bewegingssensor_inkomhal_occupancy'].state === 'on' ? 'inline-flex' : 'none'} !important; color: red !important; }
+                  ${hass.states['lock.voordeur_slot'].state === 'locked' ? '.bubble-sub-button-2 { background-color: rgba(76, 175, 80, 0.25) !important; color: rgb(46, 125, 50) !important; }' : '.bubble-sub-button-2 { background-color: rgb(229, 57, 53) !important; color: white !important; }'}
+                  ${subButtonIcon[1]?.setAttribute("icon", hass.states['lock.voordeur_slot'].state === 'locked' ? 'mdi:lock' : 'mdi:lock-open-variant')}
+                  ${hass.states['light.verlichting_inkomhal'].state === 'on' ? '.bubble-sub-button-3 { display: none !important; }' : '.bubble-sub-button-4 { display: none !important; }'}
+                  ${hass.states['light.verlichting_inkomhal'].state === 'on' ? '.bubble-sub-button-4 { background-color: ' + (hass.states['light.verlichting_inkomhal'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_inkomhal'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: binary_sensor.bewegingssensor_inkomhal_occupancy
+                    icon: mdi:motion-sensor
+                    show_background: false
+                    tap_action:
+                      action: none
+                  - entity: lock.voordeur_slot
+                    icon: mdi:lock
+                    tap_action:
+                      action: toggle
+                  - entity: light.verlichting_inkomhal
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_inkomhal
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Inkomhal
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_inkomhal
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_inkomhal
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_inkomhal
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_inkomhal
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_inkomhal
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_inkomhal
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_inkomhal
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: name
+                name: Woonkamer
+                icon: mdi:sofa
+                tap_action:
+                  action: navigate
+                  navigation_path: '#woonkamer'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/woonkamer
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#woonkamer'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/woonkamer
+                styles: |
+                  ${hass.states['light.verlichting_woonkamer'].state === 'on' ? '.bubble-sub-button-1 { display: none !important; }' : '.bubble-sub-button-2 { display: none !important; }'}
+                  ${hass.states['light.verlichting_woonkamer'].state === 'on' ? '.bubble-sub-button-2 { background-color: ' + (hass.states['light.verlichting_woonkamer'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_woonkamer'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: light.verlichting_woonkamer
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_woonkamer
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Woonkamer
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_woonkamer
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_woonkamer
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_woonkamer
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_woonkamer
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_woonkamer
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_woonkamer
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_woonkamer
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.living_bureau_achteraan_drukknop_d2_device_temperature
+                name: Bureau beneden
+                icon: mdi:desk
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#office_sumato'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/office_sumato
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#office_sumato'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/office_sumato
+                styles: |
+                  ${hass.states['light.verlichting_office_sumato'].state === 'on' ? '.bubble-sub-button-1 { display: none !important; }' : '.bubble-sub-button-2 { display: none !important; }'}
+                  ${hass.states['light.verlichting_office_sumato'].state === 'on' ? '.bubble-sub-button-2 { background-color: ' + (hass.states['light.verlichting_office_sumato'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_office_sumato'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: light.verlichting_office_sumato
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_office_sumato
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Bureau beneden
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_office_sumato
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_office_sumato
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_office_sumato
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_office_sumato
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_office_sumato
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_office_sumato
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_office_sumato
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.thuis_current_temperature
+                name: Tuin
+                icon: mdi:tree
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#tuin'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/tuin
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#tuin'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/tuin
+                styles: |
+                  ${hass.states['light.verlichting_tuin'].state === 'on' ? '.bubble-sub-button-1 { display: none !important; }' : '.bubble-sub-button-2 { display: none !important; }'}
+                  ${hass.states['light.verlichting_tuin'].state === 'on' ? '.bubble-sub-button-2 { background-color: ' + (hass.states['light.verlichting_tuin'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_tuin'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: light.verlichting_tuin
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_tuin
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Tuin
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_tuin
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_tuin
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_tuin
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_tuin
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_tuin
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_tuin
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_tuin
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: name
+                name: Berging
+                icon: mdi:archive
+                tap_action:
+                  action: navigate
+                  navigation_path: '#berging'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/berging
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#berging'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/berging
+          - type: vertical-stack
+            cards:
+              - type: custom:bubble-card
+                card_type: separator
+                name: Eerste verdieping
+                icon: mdi:home-floor-1
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.0x001788010cd90e80_temperature
+                name: Gang boven
+                icon: mdi:stairs
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#hal_1e_verdiep'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/hal_1e_verdiep
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#hal_1e_verdiep'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/hal_1e_verdiep
+                styles: |
+                  .bubble-sub-button-1 { display: ${hass.states['binary_sensor.0x001788010cd90e80_occupancy'].state === 'on' ? 'inline-flex' : 'none'} !important; color: red !important; }
+                  ${hass.states['light.verlichting_hal_1e_verdiep'].state === 'on' ? '.bubble-sub-button-2 { display: none !important; }' : '.bubble-sub-button-3 { display: none !important; }'}
+                  ${hass.states['light.verlichting_hal_1e_verdiep'].state === 'on' ? '.bubble-sub-button-3 { background-color: ' + (hass.states['light.verlichting_hal_1e_verdiep'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_hal_1e_verdiep'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: binary_sensor.0x001788010cd90e80_occupancy
+                    icon: mdi:motion-sensor
+                    show_background: false
+                    tap_action:
+                      action: none
+                  - entity: light.verlichting_hal_1e_verdiep
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_hal_1e_verdiep
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Gang boven
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_hal_1e_verdiep
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_hal_1e_verdiep
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_hal_1e_verdiep
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_hal_1e_verdiep
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_hal_1e_verdiep
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_hal_1e_verdiep
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_hal_1e_verdiep
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.bureau_1e_verdiep_drukknop_d_1_device_temperature
+                name: Bureau
+                icon: mdi:desk-lamp
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#bureau_ruimte'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/bureau_ruimte
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#bureau_ruimte'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/bureau_ruimte
+                styles: |
+                  .bubble-sub-button-1 { display: ${hass.states['binary_sensor.myggspray_wrlss_mtn_sensor_bezetting'].state === 'on' ? 'inline-flex' : 'none'} !important; color: red !important; }
+                  ${hass.states['light.verlichting_bureau_ruimte'].state === 'on' ? '.bubble-sub-button-2 { display: none !important; }' : '.bubble-sub-button-3 { display: none !important; }'}
+                  ${hass.states['light.verlichting_bureau_ruimte'].state === 'on' ? '.bubble-sub-button-3 { background-color: ' + (hass.states['light.verlichting_bureau_ruimte'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_bureau_ruimte'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: binary_sensor.myggspray_wrlss_mtn_sensor_bezetting
+                    icon: mdi:motion-sensor
+                    show_background: false
+                    tap_action:
+                      action: none
+                  - entity: light.verlichting_bureau_ruimte
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_bureau_ruimte
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Bureau
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_bureau_ruimte
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_bureau_ruimte
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_bureau_ruimte
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_bureau_ruimte
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_bureau_ruimte
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_bureau_ruimte
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_bureau_ruimte
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.hoofdslaapkamer_radiatorknop_sonoff_local_temperature
+                name: Slaapkamer
+                icon: mdi:bed
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#master_bedroom'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/master_bedroom
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#master_bedroom'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/master_bedroom
+                styles: |
+                  .bubble-sub-button-1 { display: ${hass.states['binary_sensor.slaapkamer_aanwezigheidssensor_presence'].state === 'on' ? 'inline-flex' : 'none'} !important; color: red !important; }
+                  ${hass.states['cover.tuya_rolgordijn_opener_zigbee'].state !== 'closed' ? '.bubble-sub-button-2 { background-color: var(--primary-color) !important; color: white !important; }' : ''}
+                  ${subButtonIcon[1]?.setAttribute("icon", hass.states['cover.tuya_rolgordijn_opener_zigbee'].state !== 'closed' ? 'mdi:window-shutter-open' : 'mdi:window-shutter')}
+                  ${hass.states['light.verlichting_master_bedroom'].state === 'on' ? '.bubble-sub-button-3 { display: none !important; }' : '.bubble-sub-button-4 { display: none !important; }'}
+                  ${hass.states['light.verlichting_master_bedroom'].state === 'on' ? '.bubble-sub-button-4 { background-color: ' + (hass.states['light.verlichting_master_bedroom'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_master_bedroom'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: binary_sensor.slaapkamer_aanwezigheidssensor_presence
+                    icon: mdi:motion-sensor
+                    show_background: false
+                    tap_action:
+                      action: none
+                  - entity: cover.tuya_rolgordijn_opener_zigbee
+                    icon: mdi:window-shutter
+                    tap_action:
+                      action: toggle
+                  - entity: light.verlichting_master_bedroom
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_master_bedroom
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Slaapkamer
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_master_bedroom
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_master_bedroom
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_master_bedroom
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_master_bedroom
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_master_bedroom
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_master_bedroom
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_master_bedroom
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.badkamer_radiatorknop_sonoff_local_temperature
+                name: Badkamer
+                icon: mdi:shower-head
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#badkamer'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/badkamer
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#badkamer'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/badkamer
+                styles: |
+                  .bubble-sub-button-1 { display: ${hass.states['binary_sensor.lnlinkha_e04b410172fa000000000000b9ac0000_m'].state === 'on' ? 'inline-flex' : 'none'} !important; color: red !important; }
+                  ${hass.states['light.verlichting_badkamer'].state === 'on' ? '.bubble-sub-button-2 { display: none !important; }' : '.bubble-sub-button-3 { display: none !important; }'}
+                  ${hass.states['light.verlichting_badkamer'].state === 'on' ? '.bubble-sub-button-3 { background-color: ' + (hass.states['light.verlichting_badkamer'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_badkamer'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: binary_sensor.lnlinkha_e04b410172fa000000000000b9ac0000_m
+                    icon: mdi:motion-sensor
+                    show_background: false
+                    tap_action:
+                      action: none
+                  - entity: light.verlichting_badkamer
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_badkamer
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Badkamer
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_badkamer
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_badkamer
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_badkamer
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_badkamer
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_badkamer
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_badkamer
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_badkamer
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: name
+                name: Keuken
+                icon: mdi:silverware-fork-knife
+                tap_action:
+                  action: navigate
+                  navigation_path: '#keuken'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/keuken
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#keuken'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/keuken
+                styles: |
+                  .bubble-sub-button-1 { display: ${hass.states['binary_sensor.sonoff_presence_sensor_keuken_occupancy'].state === 'on' ? 'inline-flex' : 'none'} !important; color: red !important; }
+                  ${hass.states['light.verlichting_keuken'].state === 'on' ? '.bubble-sub-button-2 { display: none !important; }' : '.bubble-sub-button-3 { display: none !important; }'}
+                  ${hass.states['light.verlichting_keuken'].state === 'on' ? '.bubble-sub-button-3 { background-color: ' + (hass.states['light.verlichting_keuken'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_keuken'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: binary_sensor.sonoff_presence_sensor_keuken_occupancy
+                    icon: mdi:motion-sensor
+                    show_background: false
+                    tap_action:
+                      action: none
+                  - entity: light.verlichting_keuken
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_keuken
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Keuken
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_keuken
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_keuken
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_keuken
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_keuken
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_keuken
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_keuken
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_keuken
+                    hold_action:
+                      action: more-info
+          - type: vertical-stack
+            cards:
+              - type: custom:bubble-card
+                card_type: separator
+                name: Tweede verdieping
+                icon: mdi:home-floor-2
+              - type: custom:bubble-card
+                card_type: button
+                button_type: name
+                name: Zolder hal
+                icon: mdi:stairs-up
+                tap_action:
+                  action: navigate
+                  navigation_path: '#zolder_hal'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/zolder_hal
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#zolder_hal'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/zolder_hal
+                styles: |
+                  ${hass.states['light.verlichting_zolder_hal'].state === 'on' ? '.bubble-sub-button-1 { display: none !important; }' : '.bubble-sub-button-2 { display: none !important; }'}
+                  ${hass.states['light.verlichting_zolder_hal'].state === 'on' ? '.bubble-sub-button-2 { background-color: ' + (hass.states['light.verlichting_zolder_hal'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_zolder_hal'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: light.verlichting_zolder_hal
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_zolder_hal
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Zolder hal
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_zolder_hal
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_zolder_hal
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_zolder_hal
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_zolder_hal
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_zolder_hal
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_zolder_hal
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_zolder_hal
+                    hold_action:
+                      action: more-info
+              - type: custom:bubble-card
+                card_type: button
+                button_type: name
+                name: Zolder
+                icon: mdi:home-roof
+                tap_action:
+                  action: navigate
+                  navigation_path: '#zolder'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/zolder
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#zolder'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/zolder
+                styles: |
+                  .bubble-sub-button-1 { color: rgb(142, 47, 137) !important; }
+                  ${hass.states['cover.zolder_velux'].state !== 'closed' ? '.bubble-sub-button-2 { background-color: var(--primary-color) !important; color: white !important; }' : ''}
+                  ${subButtonIcon[1]?.setAttribute("icon", hass.states['cover.zolder_velux'].state !== 'closed' ? 'mdi:window-shutter-open' : 'mdi:window-shutter')}
+                  ${hass.states['light.verlichting_zolder'].state === 'on' ? '.bubble-sub-button-3 { display: none !important; }' : '.bubble-sub-button-4 { display: none !important; }'}
+                  ${hass.states['light.verlichting_zolder'].state === 'on' ? '.bubble-sub-button-4 { background-color: ' + (hass.states['light.verlichting_zolder'].attributes.rgb_color ? 'rgb(' + hass.states['light.verlichting_zolder'].attributes.rgb_color.join(',') + ')' : 'var(--primary-color)') + ' !important; color: white !important; }' : ''}
+                sub_button:
+                  - entity: input_button.velux_cat_proof_open
+                    icon: mdi:cat
+                    tap_action:
+                      action: call-service
+                      service: input_button.press
+                      target:
+                        entity_id: input_button.velux_cat_proof_open
+                  - entity: cover.zolder_velux
+                    icon: mdi:window-shutter
+                    tap_action:
+                      action: toggle
+                  - entity: light.verlichting_zolder
+                    icon: mdi:lightbulb
+                    tap_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        service: browser_mod.sequence
+                        data:
+                          sequence:
+                            - service: light.turn_on
+                              data:
+                                entity_id: light.verlichting_zolder
+                            - service: browser_mod.popup
+                              data:
+                                title: Verlichting Zolder
+                                timeout: 13000
+                                content:
+                                  type: vertical-stack
+                                  cards:
+                                    - type: tile
+                                      entity: light.verlichting_zolder
+                                      features:
+                                        - type: light-brightness
+                                        - type: light-color-temp
+                                        - type: light-color-favorites
+                                    - type: custom:mushroom-chips-card
+                                      alignment: center
+                                      chips:
+                                        - type: template
+                                          icon: mdi:candle
+                                          icon_color: purple
+                                          content: Gezellig
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_gezellig
+                                            data:
+                                              doelgroep: light.verlichting_zolder
+                                        - type: template
+                                          icon: mdi:sofa
+                                          icon_color: purple
+                                          content: Relax
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_relax
+                                            data:
+                                              doelgroep: light.verlichting_zolder
+                                        - type: template
+                                          icon: mdi:brightness-6
+                                          icon_color: purple
+                                          content: Normaal
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_normaal
+                                            data:
+                                              doelgroep: light.verlichting_zolder
+                                        - type: template
+                                          icon: mdi:white-balance-sunny
+                                          icon_color: purple
+                                          content: Fel
+                                          tap_action:
+                                            action: call-service
+                                            service: script.glowify_scene_fel
+                                            data:
+                                              doelgroep: light.verlichting_zolder
+                    hold_action:
+                      action: more-info
+                  - entity: light.verlichting_zolder
+                    icon: mdi:lightbulb-on
+                    tap_action:
+                      action: call-service
+                      service: light.turn_off
+                      target:
+                        entity_id: light.verlichting_zolder
+                    hold_action:
+                      action: more-info
+          - type: vertical-stack
+            cards:
+              - type: custom:bubble-card
+                card_type: separator
+                name: Verdieping min een
+                icon: mdi:home-floor-negative-1
+              - type: custom:bubble-card
+                card_type: button
+                button_type: state
+                entity: sensor.timmerflotte_temp_hmd_sensor_temperatuur
+                name: Kelder
+                icon: mdi:home-floor-negative-1
+                show_state: true
+                tap_action:
+                  action: navigate
+                  navigation_path: '#kelder'
+                hold_action:
+                  action: navigate
+                  navigation_path: /dashboard-glowify/kelder
+                button_action:
+                  tap_action:
+                    action: navigate
+                    navigation_path: '#kelder'
+                  hold_action:
+                    action: navigate
+                    navigation_path: /dashboard-glowify/kelder
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#inkomhal'
+            name: Inkomhal
+            icon: mdi:door
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('inkomhal') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#woonkamer'
+            name: Woonkamer
+            icon: mdi:sofa
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('woonkamer') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#office_sumato'
+            name: Bureau beneden
+            icon: mdi:desk
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('office_sumato') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#tuin'
+            name: Tuin
+            icon: mdi:tree
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('tuin') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#berging'
+            name: Berging
+            icon: mdi:archive
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('berging') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#hal_1e_verdiep'
+            name: Gang boven
+            icon: mdi:stairs
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('hal_1e_verdiep') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#bureau_ruimte'
+            name: Bureau
+            icon: mdi:desk-lamp
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('bureau_ruimte') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#master_bedroom'
+            name: Slaapkamer
+            icon: mdi:bed
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('master_bedroom') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#badkamer'
+            name: Badkamer
+            icon: mdi:shower-head
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('badkamer') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#keuken'
+            name: Keuken
+            icon: mdi:silverware-fork-knife
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('keuken') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#zolder_hal'
+            name: Zolder hal
+            icon: mdi:stairs-up
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('zolder_hal') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#zolder'
+            name: Zolder
+            icon: mdi:home-roof
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('zolder') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#kelder'
+            name: Kelder
+            icon: mdi:home-floor-negative-1
+            show_header: true
+            auto_close: 30000
+            cards:
+              - type: custom:auto-entities
+                card:
+                  type: vertical-stack
+                card_param: cards
+                show_empty: false
+                filter:
+                  template: >-
+                    {% for g in [['camera', 'Camera'], ['light', 'Verlichting'], ['cover', 'Zonwering'], ['fan', 'Ventilatie'], ['switch', 'Schakelaars'], ['lock', 'Sloten'], ['climate', 'Verwarming'], ['media_player', 'Media']] %}{% set es = area_entities('kelder') | select('match', g[0] ~ '\.') | reject('search', 'verlichting_') | reject('search', 'network_indicator|turbo_mode|detach_relay|delayed_power|child_lock|led_enable|led_indication|led_night_mode|do_not_disturb|power_on_behavior|open_window|smart_temperature') | reject('in', label_entities('verberg')) | list %}{% if es | count > 0 %}{{ {'type': 'custom:mushroom-title-card', 'subtitle': g[1]} }},{% for e in es %}{% if g[0] == 'camera' %}{{ {'type': 'picture-entity', 'entity': e, 'camera_view': 'live', 'show_name': false, 'show_state': false} }},{% elif g[0] == 'light' %}{% set m = state_attr(e, 'supported_color_modes') or [] %}{% set feats = [{'type': 'light-brightness'}] %}{% if 'color_temp' in m %}{% set feats = feats + [{'type': 'light-color-temp'}] %}{% endif %}{% if m | select('in', ['hs', 'rgb', 'rgbw', 'rgbww', 'xy']) | list | count > 0 %}{% set feats = feats + [{'type': 'light-color-favorites'}] %}{% endif %}{{ {'type': 'tile', 'entity': e, 'features': feats} }},{% elif g[0] == 'cover' %}{{ {'type': 'custom:mushroom-cover-card', 'entity': e, 'show_buttons_control': true} }},{% elif g[0] == 'fan' %}{{ {'type': 'custom:mushroom-fan-card', 'entity': e} }},{% elif g[0] == 'lock' %}{{ {'type': 'custom:mushroom-lock-card', 'entity': e} }},{% elif g[0] == 'switch' %}{% set dev = device_id(e) %}{% if not dev or device_entities(dev) | select('match', 'camera\.') | list | count == 0 %}{{ {'type': 'custom:mushroom-entity-card', 'entity': e, 'tap_action': {'action': 'toggle'}} }},{% endif %}{% elif g[0] == 'climate' %}{{ {'type': 'custom:mushroom-climate-card', 'entity': e} }},{% else %}{{ {'type': 'custom:mushroom-media-player-card', 'entity': e} }},{% endif %}{% endfor %}{% endif %}{% endfor %}
+          - type: custom:bubble-card
+            card_type: pop-up
+            hash: '#instellingen'
+            name: Scene-instellingen
+            icon: mdi:tune
+            show_header: true
+            cards:
+              - type: entities
+                entities:
+                  - input_number.glowify_gezellig_helderheid
+                  - input_number.glowify_gezellig_kleurtemperatuur
+                  - input_number.glowify_relax_helderheid
+                  - input_number.glowify_relax_kleurtemperatuur
+                  - input_number.glowify_normaal_helderheid
+                  - input_number.glowify_normaal_kleurtemperatuur
+                  - input_number.glowify_fel_helderheid
+                  - input_number.glowify_fel_kleurtemperatuur
+    domains:
+      light:
+        show_controls: false
+      fan:
+        show_controls: false
+      switch:
+        show_controls: false
+      cover:
+        title: Zonwering
+        show_controls: false
+    areas:
+      undisclosed:
+        hidden: true
+      mobiel:
+        hidden: true
+      light_tester:
+        hidden: true
+      alles_aan_uit:
+        hidden: true
+      all_house:
+        hidden: true
+      voorplaats_gelijkvloers:
+        hidden: true
+      inkomhal:
+        icon: mdi:door
+        icon_color: orange
+        order: 1
+      woonkamer:
+        icon: mdi:sofa
+        icon_color: orange
+        order: 2
+      office_sumato:
+        icon: mdi:desk
+        icon_color: orange
+        order: 3
+      tuin:
+        icon: mdi:tree
+        icon_color: orange
+        order: 4
+      berging:
+        icon: mdi:archive
+        icon_color: orange
+        order: 5
+      hal_1e_verdiep:
+        icon: mdi:stairs
+        icon_color: orange
+        order: 6
+      bureau_ruimte:
+        icon: mdi:desk-lamp
+        icon_color: orange
+        order: 7
+      master_bedroom:
+        icon: mdi:bed
+        icon_color: orange
+        order: 8
+      badkamer:
+        icon: mdi:shower-head
+        icon_color: orange
+        order: 9
+      keuken:
+        icon: mdi:silverware-fork-knife
+        icon_color: orange
+        order: 10
+      zolder_hal:
+        icon: mdi:stairs-up
+        icon_color: orange
+        order: 11
+      zolder:
+        icon: mdi:home-roof
+        icon_color: orange
+        order: 12
+      kelder:
+        icon: mdi:home-floor-negative-1
+        icon_color: orange
+        order: 13
+views: []

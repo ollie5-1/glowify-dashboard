@@ -1,0 +1,42 @@
+name: Release
+
+# Bij een versietag (bv. v1.0.0) wordt de bundle gebouwd en als release-asset
+# gepubliceerd, zodat HACS "glowify-dashboard.js" kan downloaden en installeren.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build bundle
+        run: npm run build
+
+      - name: Publish release met de bundle als asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/glowify-dashboard.js
+          generate_release_notes: true

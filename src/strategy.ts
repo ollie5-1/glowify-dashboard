@@ -1,6 +1,7 @@
 import { GlowifyRegistry } from "./registry";
 import { buildFloorModel } from "./model/floorModel";
 import { buildHomeView } from "./views/homeView";
+import { buildDomainViews } from "./views/domainViews";
 import { buildRoomSubview } from "./views/roomSubview";
 import { isEditMode } from "./features/editMode";
 import { getDashboardBasePath } from "./features/lovelaceApi";
@@ -76,7 +77,11 @@ export class GlowifyStrategy {
     const basePath = getDashboardBasePath();
     const homeView = buildHomeView(reg, floors, isEditMode(), basePath);
 
-    // Per kamer een subview (lang indrukken op de kamerbalk).
+    // Domein-tabbladen (Lampen, Ventilatie, Zonwering, Schakelaars, Sloten).
+    const domainViews = buildDomainViews(reg, floors);
+
+    // Per kamer een subview (lang indrukken op de kamerbalk), verborgen uit
+    // de tabbladbalk.
     const subviews: LovelaceViewConfig[] = [];
     for (const floor of floors) {
       for (const room of floor.rooms) {
@@ -86,7 +91,7 @@ export class GlowifyStrategy {
 
     return {
       title: reg.options.title ?? "Glowify",
-      views: [homeView, ...subviews],
+      views: [homeView, ...domainViews, ...subviews],
     };
   }
 }

@@ -342,6 +342,34 @@ async function main(): Promise<void> {
   const bergingSub = subviews.find((v: any) => v.path === "berging") as any;
   ok(bergingSub.cards[0].type === "markdown", "lege kamer krijgt een nette placeholder");
 
+  console.log("== Domein-views (Fase 10) ==");
+  const domainPaths = ["lampen", "ventilatie", "zonwering", "schakelaars", "sloten"];
+  ok(result.views[0].path === "glowify-thuis", "Thuis blijft de eerste view");
+  ok(domainPaths.every((p) => result.views.some((v: any) => v.path === p)), "vijf domein-views aanwezig");
+  const firstSubIdx = result.views.findIndex((v: any) => v.subview === true);
+  const lampenIdx = result.views.findIndex((v: any) => v.path === "lampen");
+  ok(lampenIdx > 0 && lampenIdx < firstSubIdx, "domein-views staan na Thuis en vóór de subviews");
+  ok(result.views.filter((v: any) => domainPaths.includes(v.path)).every((v: any) => v.subview !== true), "domein-views zijn zichtbaar (geen subview)");
+
+  const lampen = result.views.find((v: any) => v.path === "lampen") as any;
+  ok(lampen.cards.some((c: any) => c.type === "custom:mushroom-title-card" && c.title === "Woonkamer"), "Lampen groepeert per kamer met een titeltje");
+  const lampenJson = JSON.stringify(lampen.cards);
+  ok(lampenJson.includes("light.woonkamer_leeslamp"), "individuele lamp in de Lampen-view");
+  ok(!lampenJson.includes("light.verlichting_woonkamer"), "lichtgroep niet in de Lampen-view");
+
+  const schak = result.views.find((v: any) => v.path === "schakelaars") as any;
+  const schakJson = JSON.stringify(schak.cards);
+  ok(schakJson.includes("switch.woonkamer_stopcontact"), "gewone schakelaar in de Schakelaars-view");
+  ok(
+    !schakJson.includes("cam_privacy") && !schakJson.includes("child_lock") && !schakJson.includes("geheim"),
+    "camera-switch, werkregel en verberg gefilterd in de Schakelaars-view",
+  );
+
+  const sloten = result.views.find((v: any) => v.path === "sloten") as any;
+  ok(JSON.stringify(sloten.cards).includes("lock.voordeur"), "slot in de Sloten-view");
+  const venti = result.views.find((v: any) => v.path === "ventilatie") as any;
+  ok(JSON.stringify(venti.cards).includes("fan.badkamer_ventilatie"), "ventilator in de Ventilatie-view");
+
   console.log("== Bewerkmodus UIT (UX-1) ==");
   const chips1 = (cards[0] as any).chips;
   ok(chips1.some((c: any) => c.icon === "mdi:pencil"), "potlood-chip altijd zichtbaar");

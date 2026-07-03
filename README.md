@@ -61,7 +61,9 @@ De strategie leest je woning en bouwt de rest zelf op. Zie
 [Opties](#opties) voor de fijnafstelling.
 
 **Bediening:** tik op een kamerbalk voor de pop-up, **lang indrukken** voor de
-volledige kamerpagina (subview).
+volledige kamerpagina (subview). Bovenaan staan naast **Thuis** de domein-
+tabbladen **Lampen, Ventilatie, Zonwering, Schakelaars, Sloten**, telkens per
+kamer gegroepeerd.
 
 ## Opties
 

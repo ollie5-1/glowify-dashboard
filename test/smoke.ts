@@ -13,6 +13,7 @@ import {
   entityForItem,
   targetFieldFor,
 } from "../src/features/editorLogic";
+import { jsonSafe } from "../src/debug";
 import type { GlowifyStrategyOptions } from "../src/types/options";
 import type {
   AreaRegistryEntry,
@@ -583,6 +584,20 @@ async function main(): Promise<void> {
 
   await keyMatchScenario();
   await indexShiftScenario();
+
+  console.log("== Diagnostiek jsonSafe (Fase 13) ==");
+  const safe = jsonSafe(
+    { type: "custom:glowify", options: { debug: true, rooms: { woonkamer: { extra_sub_buttons: [{ entity: "x" }] } } } },
+    5,
+  ) as any;
+  ok(safe.type === "custom:glowify", "primitieven blijven behouden");
+  ok(safe.options.debug === true, "geneste optie zichtbaar (options.debug)");
+  ok(Array.isArray(safe.options.rooms.woonkamer.extra_sub_buttons), "diepe structuur wordt uitgeklapt");
+  const hassLike = jsonSafe({ states: {}, callWS: () => undefined }, 5);
+  ok(typeof hassLike === "string" && hassLike.includes("hass-achtig"), "hass-achtig object niet uitgeklapt");
+  const circ: any = {};
+  circ.self = circ;
+  ok(JSON.stringify(jsonSafe(circ, 5)).includes("circular"), "circulaire verwijzing veilig gemarkeerd");
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

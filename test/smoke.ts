@@ -198,6 +198,96 @@ async function keyMatchScenario(): Promise<void> {
   ok((bar.sub_button ?? []).length === 2, "beide extra sub-knopjes staan op de balk, bewerkmodus uit");
 }
 
+/**
+ * Verifieert exact dat de styles-indices dynamisch meeschuiven met het aantal
+ * extra_sub_buttons: drie extras + beweging + zonwering + lampenpaar. De
+ * display-none-regels van het lampenpaar mogen NOOIT de extras (of de cover)
+ * raken; de cover-icoonwissel moet op de juiste subButtonIcon-index staan.
+ */
+async function indexShiftScenario(): Promise<void> {
+  console.log("== Index-verschuiving met 3 extras + cover + lampenpaar (Fase 12) ==");
+  _ls["glowify_edit_mode"] = "0";
+
+  const flr: FloorRegistryEntry[] = [
+    { floor_id: "begane", name: "Gelijkvloers", level: 0, icon: null, aliases: [] },
+  ];
+  const ar: AreaRegistryEntry[] = [
+    { area_id: "testkamer", name: "Testkamer", floor_id: "begane", icon: "mdi:test-tube", picture: null, labels: [], aliases: [] },
+  ];
+  const es: EntityRegistryEntry[] = [
+    ent({ entity_id: "light.verlichting_testkamer", area_id: "testkamer" }),
+    ent({ entity_id: "cover.test_rolluik", area_id: "testkamer" }),
+    ent({ entity_id: "binary_sensor.test_beweging", area_id: "testkamer", device_class: "motion" }),
+  ];
+  const st: Record<string, HassEntity> = {
+    "light.verlichting_testkamer": { entity_id: "light.verlichting_testkamer", state: "on", attributes: { rgb_color: [255, 170, 60] } },
+    "cover.test_rolluik": { entity_id: "cover.test_rolluik", state: "open", attributes: {} },
+    "binary_sensor.test_beweging": { entity_id: "binary_sensor.test_beweging", state: "off", attributes: {} },
+  };
+  const h: HomeAssistant = {
+    states: st,
+    async callWS<T>(msg: Record<string, unknown>): Promise<T> {
+      switch (msg.type) {
+        case "config/area_registry/list": return ar as unknown as T;
+        case "config/floor_registry/list": return flr as unknown as T;
+        case "config/entity_registry/list": return es as unknown as T;
+        default: return [] as unknown as T;
+      }
+    },
+  };
+
+  const cfg = {
+    type: "custom:glowify",
+    options: {
+      rooms: {
+        testkamer: {
+          extra_sub_buttons: [
+            { entity: "input_button.a", icon: "mdi:cat", color_when_active: "rgb(142, 47, 137)" },
+            { entity: "input_button.b", icon: "mdi:star", color_when_active: "rgb(76, 128, 201)" },
+            { entity: "input_button.c", icon: "mdi:heart", color_when_active: "rgb(46, 125, 50)" },
+          ],
+        },
+      },
+    },
+  };
+
+  const res = await GlowifyStrategy.generate(cfg, h);
+  const stack = res.views[0].cards!.find((c: any) => c.type === "vertical-stack") as any;
+  const bar = stack.cards.find((c: any) => c.name === "Testkamer");
+  const sb: any[] = bar.sub_button;
+  const styles: string = bar.styles;
+
+  // Verwachte volgorde: beweging(1), extra a(2), extra b(3), extra c(4),
+  // zonwering(5, subButtonIcon[4]), lamp-trigger(6), lamp-uit(7).
+  ok(sb.length === 7, "zeven sub-knopjes (beweging + 3 extras + cover + lampenpaar)");
+  ok(sb[0].entity === "binary_sensor.test_beweging", "beweging op index 0");
+  ok(sb[1].entity === "input_button.a" && sb[2].entity === "input_button.b" && sb[3].entity === "input_button.c", "drie extras op index 1-3");
+  ok(sb[4].entity === "cover.test_rolluik", "zonwering op index 4");
+  ok(sb[5].icon === "mdi:lightbulb" && sb[6].icon === "mdi:lightbulb-on", "lampenpaar op index 5-6");
+
+  // Exacte styles-indices.
+  ok(styles.includes(".bubble-sub-button-1 { display:"), "beweging-style op .bubble-sub-button-1");
+  ok(styles.includes(".bubble-sub-button-2 { color: rgb(142, 47, 137)"), "extra a op .bubble-sub-button-2");
+  ok(styles.includes(".bubble-sub-button-3 { color: rgb(76, 128, 201)"), "extra b op .bubble-sub-button-3");
+  ok(styles.includes(".bubble-sub-button-4 { color: rgb(46, 125, 50)"), "extra c op .bubble-sub-button-4");
+  ok(styles.includes(".bubble-sub-button-5 { background-color"), "zonwering-achtergrond op .bubble-sub-button-5");
+  ok(styles.includes(".bubble-sub-button-6 { display: none"), "lamp-trigger display op .bubble-sub-button-6");
+  ok(styles.includes(".bubble-sub-button-7 { display: none"), "lamp-uit display op .bubble-sub-button-7");
+  ok(styles.includes(".bubble-sub-button-7 { background-color"), "lamp-kleur op .bubble-sub-button-7");
+
+  // Kritiek: de cover-icoonwissel gebruikt subButtonIcon[4] en niets anders.
+  const iconRefs = styles.match(/subButtonIcon\[(\d+)\]/g) ?? [];
+  ok(iconRefs.length === 1 && iconRefs[0] === "subButtonIcon[4]", "enige subButtonIcon-verwijzing is [4] (de cover)");
+
+  // Kritiek: geen enkele display-none-regel raakt de extras (index 2-4).
+  ok(
+    !styles.includes(".bubble-sub-button-2 { display: none") &&
+      !styles.includes(".bubble-sub-button-3 { display: none") &&
+      !styles.includes(".bubble-sub-button-4 { display: none"),
+    "display-none van het lampenpaar verbergt de extras niet",
+  );
+}
+
 async function main(): Promise<void> {
   // Bewerkmodus standaard uit → geen plus/opruim, zuivere sub-knop-volgorde.
   _ls["glowify_edit_mode"] = "0";
@@ -492,6 +582,7 @@ async function main(): Promise<void> {
   ok(exWk.styles.includes(".bubble-sub-button-2 { color:"), "special krijgt zijn kleurtaal-styling op de juiste index");
 
   await keyMatchScenario();
+  await indexShiftScenario();
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

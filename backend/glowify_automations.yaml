@@ -1,0 +1,4 @@
+# Glowify automatiseringen
+# Haak voor klantspecifieke automatiseringen. Standaard leeg.
+# Voeg in configuration.yaml toe:  automation glowify: !include glowify_automations.yaml
+[]

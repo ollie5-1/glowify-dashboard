@@ -25,6 +25,17 @@ Deze frontend-onderdelen worden verondersteld aanwezig te zijn (via HACS):
 Home Assistant **2026.5** of nieuwer (voor de custom dashboard strategy API en
 de zichtbaarheid onder *Communitydashboards*).
 
+## Volledige installatie
+
+Voor een nieuwe woning: zie **[INSTALL.md](INSTALL.md)** — het volledige
+draaiboek (thema, Areas/floors, backend-blokken, dashboard toevoegen, testen).
+De meegeleverde bestanden:
+
+- `themes/glowify.yaml` — het merkthema (lichte en donkere modus).
+- `backend/glowify_scripts.yaml` — de vier scènescripts (werken via `doelgroep`).
+- `backend/configuration.example.yaml` — frontend-blok, includes, lichtgroepen
+  en de acht scene-schuifjes.
+
 ## Installatie via HACS
 
 1. HACS → drie puntjes → **Custom repositories**.

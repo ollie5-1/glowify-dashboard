@@ -1,0 +1,70 @@
+# Glowify scènescripts
+# Voeg in configuration.yaml toe:  script glowify: !include glowify_scripts.yaml
+#
+# Elke scène werkt op een willekeurige lichtgroep via het veld `doelgroep`
+# en leest haar helderheid en kleurtemperatuur uit de schuifjes (input_number).
+# Zo blijven de scènes kamerneutraal (Gezellig, Relax, Normaal, Fel).
+
+glowify_scene_gezellig:
+  alias: Glowify scène Gezellig
+  mode: parallel
+  fields:
+    doelgroep:
+      description: De lichtgroep (entity_id) waarop de scène werkt
+      required: true
+      example: light.verlichting_woonkamer
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: "{{ doelgroep }}"
+      data:
+        brightness_pct: "{{ states('input_number.glowify_gezellig_helderheid') | int }}"
+        color_temp_kelvin: "{{ states('input_number.glowify_gezellig_kleurtemperatuur') | int }}"
+
+glowify_scene_relax:
+  alias: Glowify scène Relax
+  mode: parallel
+  fields:
+    doelgroep:
+      description: De lichtgroep (entity_id) waarop de scène werkt
+      required: true
+      example: light.verlichting_woonkamer
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: "{{ doelgroep }}"
+      data:
+        brightness_pct: "{{ states('input_number.glowify_relax_helderheid') | int }}"
+        color_temp_kelvin: "{{ states('input_number.glowify_relax_kleurtemperatuur') | int }}"
+
+glowify_scene_normaal:
+  alias: Glowify scène Normaal
+  mode: parallel
+  fields:
+    doelgroep:
+      description: De lichtgroep (entity_id) waarop de scène werkt
+      required: true
+      example: light.verlichting_woonkamer
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: "{{ doelgroep }}"
+      data:
+        brightness_pct: "{{ states('input_number.glowify_normaal_helderheid') | int }}"
+        color_temp_kelvin: "{{ states('input_number.glowify_normaal_kleurtemperatuur') | int }}"
+
+glowify_scene_fel:
+  alias: Glowify scène Fel
+  mode: parallel
+  fields:
+    doelgroep:
+      description: De lichtgroep (entity_id) waarop de scène werkt
+      required: true
+      example: light.verlichting_woonkamer
+  sequence:
+    - service: light.turn_on
+      target:
+        entity_id: "{{ doelgroep }}"
+      data:
+        brightness_pct: "{{ states('input_number.glowify_fel_helderheid') | int }}"
+        color_temp_kelvin: "{{ states('input_number.glowify_fel_kleurtemperatuur') | int }}"

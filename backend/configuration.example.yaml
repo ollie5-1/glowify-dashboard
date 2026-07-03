@@ -1,0 +1,98 @@
+# Glowify backend-blokken — voorbeeld
+# Neem deze blokken over in je <config>/configuration.yaml en herstart HA.
+# Pas de lichtgroepen aan de woning aan (één groep per kamer, entiteit
+# light.verlichting_<area_id> volgens de naamconventie).
+
+# --- Frontend: thema + Bubble Card pop-up-fix ---
+frontend:
+  themes: !include_dir_merge_named themes
+
+# --- Includes ---
+automation: !include automations.yaml
+automation glowify: !include glowify_automations.yaml
+script: !include scripts.yaml
+script glowify: !include glowify_scripts.yaml
+
+# --- Lichtgroepen per kamer (voorbeeld; pas aan de woning aan) ---
+# De strategie zoekt per kamer light.verlichting_<area_id>.
+light:
+  - platform: group
+    name: Verlichting Woonkamer
+    unique_id: verlichting_woonkamer
+    entities:
+      - light.woonkamer_spots
+      - light.woonkamer_leeslamp
+  - platform: group
+    name: Verlichting Keuken
+    unique_id: verlichting_keuken
+    entities:
+      - light.keuken_plafond
+  # ... herhaal per kamer. Statuslampjes van gateways/hubs NOOIT opnemen
+  #     (die zijn geen lampen) en geef ze het label 'verberg'.
+
+# --- Scene-schuifjes: helderheid (%) en kleurtemperatuur (K) per scène ---
+input_number:
+  glowify_gezellig_helderheid:
+    name: Gezellig helderheid
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-6
+    initial: 30
+  glowify_gezellig_kleurtemperatuur:
+    name: Gezellig kleurtemperatuur
+    min: 2000
+    max: 6500
+    step: 50
+    unit_of_measurement: K
+    icon: mdi:thermometer
+    initial: 2400
+  glowify_relax_helderheid:
+    name: Relax helderheid
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-6
+    initial: 15
+  glowify_relax_kleurtemperatuur:
+    name: Relax kleurtemperatuur
+    min: 2000
+    max: 6500
+    step: 50
+    unit_of_measurement: K
+    icon: mdi:thermometer
+    initial: 2200
+  glowify_normaal_helderheid:
+    name: Normaal helderheid
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-6
+    initial: 65
+  glowify_normaal_kleurtemperatuur:
+    name: Normaal kleurtemperatuur
+    min: 2000
+    max: 6500
+    step: 50
+    unit_of_measurement: K
+    icon: mdi:thermometer
+    initial: 2900
+  glowify_fel_helderheid:
+    name: Fel helderheid
+    min: 1
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:brightness-6
+    initial: 100
+  glowify_fel_kleurtemperatuur:
+    name: Fel kleurtemperatuur
+    min: 2000
+    max: 6500
+    step: 50
+    unit_of_measurement: K
+    icon: mdi:thermometer
+    initial: 4600

@@ -1,0 +1,69 @@
+# Glowify-thema
+# Plaats dit bestand in <config>/themes/glowify.yaml en voeg in configuration.yaml toe:
+#   frontend:
+#     themes: !include_dir_merge_named themes
+# Herlaad daarna: Ontwikkelaarshulpmiddelen > YAML > Thema's herladen.
+#
+# De merkgloed is oranje (#EC7622). De kleurtaal-kleuren zijn hier op de
+# HA-statuskleuren gezet zodat 'orange/purple/blue/green/red/grey' overal
+# dezelfde betekenis krijgen (zie docs/spec/Glowify kleurtaal dashboard.md).
+
+Glowify:
+  # --- Merk- en kleurtaal (gedeeld over licht en donker) ---
+  primary-color: "#EC7622"
+  rgb-primary-color: "236,118,34"
+  accent-color: "#EC7622"
+  rgb-accent-color: "236,118,34"
+
+  # Kleurtaal → HA-statuskleuren
+  orange-color: "#EC7622" # comfort
+  rgb-orange-color: "236,118,34"
+  purple-color: "#8E2F89" # speciale stand / scène
+  rgb-purple-color: "142,47,137"
+  blue-color: "#4C80C9" # lucht & klimaat
+  rgb-blue-color: "76,128,201"
+  green-color: "#2E7D32" # veilig
+  rgb-green-color: "46,125,50"
+  red-color: "#E53935" # aandacht
+  rgb-red-color: "229,57,53"
+  grey-color: "#9E9E9E" # neutraal
+  rgb-grey-color: "158,158,158"
+
+  # Mushroom-kleuren
+  mush-rgb-orange: "236,118,34"
+  mush-rgb-purple: "142,47,137"
+  mush-rgb-blue: "76,128,201"
+  mush-rgb-green: "46,125,50"
+  mush-rgb-red: "229,57,53"
+  mush-rgb-grey: "158,158,158"
+  mush-icon-border-radius: "50%"
+
+  # Bubble Card
+  bubble-accent-color: "#EC7622"
+  bubble-main-background-color: "var(--card-background-color)"
+  bubble-border-radius: "24px"
+  bubble-sub-button-border-radius: "16px"
+  # Pop-up-fix: houd de pop-up boven de rest en netjes afgerond.
+  bubble-pop-up-border-radius: "28px"
+
+  # Vormgeving
+  ha-card-border-radius: "18px"
+  ha-card-border-width: "0px"
+
+  modes:
+    light:
+      primary-background-color: "#F6F4F1"
+      secondary-background-color: "#FFFFFF"
+      card-background-color: "#FFFFFF"
+      primary-text-color: "#1C1C1C"
+      secondary-text-color: "#6B6B6B"
+      divider-color: "rgba(0,0,0,0.08)"
+      state-icon-color: "#6B6B6B"
+    dark:
+      primary-background-color: "#141414"
+      secondary-background-color: "#1E1E1E"
+      card-background-color: "#1E1E1E"
+      primary-text-color: "#F2F2F2"
+      secondary-text-color: "#A6A6A6"
+      divider-color: "rgba(255,255,255,0.08)"
+      state-icon-color: "#A6A6A6"

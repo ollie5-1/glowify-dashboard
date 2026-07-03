@@ -97,4 +97,9 @@ export interface GlowifyStrategyOptions {
   show_cleanup_chip?: boolean;
   /** Toon een plusknopje op elke kamerbalk. Default true. */
   plus_on_bars?: boolean;
+  /**
+   * Debugmodus: logt bij het genereren per kamer de volledige kamerbalk-config
+   * (sub_button + styles) en de gelezen opties naar de browserconsole.
+   */
+  debug?: boolean;
 }

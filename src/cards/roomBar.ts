@@ -13,6 +13,7 @@ import {
 import { lightOffAction } from "./lightAction";
 import { buildLightPanelAction } from "../scenes";
 import { buildPlusSubButton } from "../features/editorChips";
+import { safeClone } from "../debug";
 import type { LovelaceCardConfig } from "../types/homeassistant";
 
 interface SubButton {
@@ -147,6 +148,22 @@ export function buildRoomBar(
   }
   if (subButtons.length > 0) bar.sub_button = subButtons;
   if (styleLines.length > 0) bar.styles = styleLines.join("\n") + "\n";
+
+  if (reg.options.debug) {
+    /* eslint-disable no-console */
+    console.log(
+      `%c🔍 Kamerbalk: ${room.name} (area_id: ${room.areaId})`,
+      "color:#EC7622;font-weight:700;",
+    );
+    console.log("   room.options:", safeClone(room.options));
+    console.log(
+      `   extra_sub_buttons uit opties: ${(room.options.extra_sub_buttons ?? []).length}`,
+      safeClone(room.options.extra_sub_buttons ?? []),
+    );
+    console.log(`   sub_button (${subButtons.length}):`, safeClone(subButtons));
+    console.log("   styles:\n" + (bar.styles ?? "(geen)"));
+    /* eslint-enable no-console */
+  }
 
   return bar;
 }

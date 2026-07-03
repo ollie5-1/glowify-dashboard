@@ -5,6 +5,7 @@ import { buildDomainViews } from "./views/domainViews";
 import { buildRoomSubview } from "./views/roomSubview";
 import { isEditMode } from "./features/editMode";
 import { getDashboardBasePath } from "./features/lovelaceApi";
+import { debugHeader, safeClone } from "./debug";
 import type {
   DashboardStrategyInfo,
   HomeAssistant,
@@ -73,6 +74,17 @@ export class GlowifyStrategy {
     rawOptions: GlowifyStrategyOptions | undefined,
   ): Promise<LovelaceConfig> {
     const reg = await GlowifyRegistry.create(hass, rawOptions);
+
+    if (reg.options.debug) {
+      debugHeader();
+      // eslint-disable-next-line no-console
+      console.log("Ruwe opties die generate() ontving:", safeClone(rawOptions));
+      // eslint-disable-next-line no-console
+      console.log("Opties na merge met defaults:", safeClone(reg.options));
+      // eslint-disable-next-line no-console
+      console.log("rooms-sleutels in de opties:", Object.keys(reg.options.rooms ?? {}));
+    }
+
     const floors = buildFloorModel(reg);
     const basePath = getDashboardBasePath();
     const homeView = buildHomeView(reg, floors, isEditMode(), basePath);

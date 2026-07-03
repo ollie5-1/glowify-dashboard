@@ -9,10 +9,23 @@ import type {
   HomeAssistant,
   LabelRegistryEntry,
 } from "./types/homeassistant";
-import type { GlowifyStrategyOptions } from "./types/options";
+import type { GlowifyStrategyOptions, RoomOptions } from "./types/options";
 
 /** area_id-fallback voor entiteiten zonder area. */
 export const UNDISCLOSED = "undisclosed";
+
+/**
+ * Slugt een naam op dezelfde manier als HA area-id's opbouwt: kleine letters,
+ * spaties en vreemde tekens naar underscores. "Woonkamer" → "woonkamer".
+ */
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 /**
  * Leest de HA-registries (areas, floors, devices, entities, labels) en
@@ -109,6 +122,28 @@ export class GlowifyRegistry {
 
   getEntity(entityId: string): EntityRegistryEntry | undefined {
     return this.entityById.get(entityId);
+  }
+
+  /**
+   * Resolveert de per-kamer opties robuust: eerst op area_id (zoals de
+   * plusknop-editor wegschrijft), dan op de slug van de naam, dan op de naam
+   * zelf. Zo matcht bv. `rooms.woonkamer` ook wanneer de echte area_id anders
+   * is dan de naam-slug.
+   */
+  roomOptionsFor(area: AreaRegistryEntry): RoomOptions {
+    const rooms = this.options.rooms ?? {};
+    return rooms[area.area_id] ?? rooms[slugify(area.name)] ?? rooms[area.name] ?? {};
+  }
+
+  /** True wanneer de area in hidden_areas staat (via id, slug of naam). */
+  isAreaInHiddenList(area: AreaRegistryEntry): boolean {
+    const list = this.options.hidden_areas ?? [];
+    if (list.length === 0) return false;
+    return (
+      list.includes(area.area_id) ||
+      list.includes(slugify(area.name)) ||
+      list.includes(area.name)
+    );
   }
 
   /**

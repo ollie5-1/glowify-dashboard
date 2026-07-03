@@ -17,6 +17,8 @@ interface StrategyGenerateConfig {
   type?: string;
   options?: GlowifyStrategyOptions;
   strategy?: { options?: GlowifyStrategyOptions };
+  hass?: HomeAssistant;
+  config?: StrategyGenerateConfig;
   [key: string]: unknown;
 }
 
@@ -36,7 +38,8 @@ export class GlowifyStrategy {
     config: StrategyGenerateConfig,
     hass: HomeAssistant,
   ): Promise<LovelaceConfig> {
-    return GlowifyStrategy.build(hass, GlowifyStrategy.extractOptions(config));
+    const realHass = hass ?? config?.hass ?? config?.config?.hass;
+    return GlowifyStrategy.build(realHass, GlowifyStrategy.extractOptions(config));
   }
 
   /** Legacy API (achterwaartse compatibiliteit). info.config is de volledige config. */
@@ -46,11 +49,22 @@ export class GlowifyStrategy {
     return GlowifyStrategy.build(info.hass, GlowifyStrategy.extractOptions(info.config));
   }
 
-  /** Haalt de opties uit gelijk welke config-vorm die HA kan doorgeven. */
+  /**
+   * Haalt de opties uit gelijk welke config-vorm die HA kan doorgeven:
+   *  - modern: het strategy-object zelf → `config.options`
+   *  - vol dashboard: `config.strategy.options`
+   *  - info-vorm: `config.config.(strategy.)options`
+   */
   private static extractOptions(
     config: StrategyGenerateConfig | undefined,
   ): GlowifyStrategyOptions | undefined {
-    return config?.options ?? config?.strategy?.options;
+    if (!config) return undefined;
+    return (
+      config.options ??
+      config.strategy?.options ??
+      config.config?.options ??
+      config.config?.strategy?.options
+    );
   }
 
   private static async build(

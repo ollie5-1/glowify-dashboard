@@ -37,16 +37,15 @@ const ALTIJD_VERBORGEN = new Set([UNDISCLOSED]);
 /**
  * Bepaalt of een area getoond moet worden op de Thuis-view.
  */
-function isAreaHidden(reg: GlowifyRegistry, areaId: string): boolean {
-  if (ALTIJD_VERBORGEN.has(areaId)) return true;
-  if ((reg.options.hidden_areas ?? []).includes(areaId)) return true;
-  const roomOpts = reg.options.rooms?.[areaId];
-  return Boolean(roomOpts?.hidden);
+function isAreaHidden(reg: GlowifyRegistry, area: AreaRegistryEntry): boolean {
+  if (ALTIJD_VERBORGEN.has(area.area_id)) return true;
+  if (reg.isAreaInHiddenList(area)) return true;
+  return Boolean(reg.roomOptionsFor(area).hidden);
 }
 
-/** Bouwt een RoomModel uit een area + opties. */
+/** Bouwt een RoomModel uit een area + opties (robuust geresolveerd). */
 function buildRoom(reg: GlowifyRegistry, area: AreaRegistryEntry, index: number): RoomModel {
-  const opts = reg.options.rooms?.[area.area_id] ?? {};
+  const opts = reg.roomOptionsFor(area);
   return {
     areaId: area.area_id,
     name: opts.name ?? area.name,
@@ -87,7 +86,7 @@ function buildFromManual(
     const rooms: RoomModel[] = [];
     mf.areas.forEach((areaId, i) => {
       const area = reg.getArea(areaId);
-      if (!area || isAreaHidden(reg, areaId)) return;
+      if (!area || isAreaHidden(reg, area)) return;
       rooms.push(buildRoom(reg, area, i));
     });
     if (rooms.length === 0) return;
@@ -109,7 +108,7 @@ function buildFromRegistry(reg: GlowifyRegistry): FloorModel[] {
   const ungrouped: RoomModel[] = [];
 
   reg.areas.forEach((area, i) => {
-    if (isAreaHidden(reg, area.area_id)) return;
+    if (isAreaHidden(reg, area)) return;
     const room = buildRoom(reg, area, i);
     if (area.floor_id) {
       const list = byFloor.get(area.floor_id);

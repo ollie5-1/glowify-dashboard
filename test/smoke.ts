@@ -137,6 +137,67 @@ const hass: HomeAssistant = {
   },
 };
 
+/**
+ * Reproduceert de demo-bug: de strategy-config bevat rooms.woonkamer, maar de
+ * echte area_id van "Woonkamer" is een andere slug/id. De generator moet de
+ * per-kamer opties tóch matchen (via de naam-slug) en de extra_sub_buttons
+ * renderen — ook met bewerkmodus uit.
+ */
+async function keyMatchScenario(): Promise<void> {
+  console.log("== Renderbug: sleutel-matching met letterlijke config (Fase 9) ==");
+  _ls["glowify_edit_mode"] = "0";
+
+  const kmFloors: FloorRegistryEntry[] = [
+    { floor_id: "begane", name: "Gelijkvloers", level: 0, icon: null, aliases: [] },
+  ];
+  // De echte area_id verschilt bewust van de naam-slug "woonkamer".
+  const kmAreas: AreaRegistryEntry[] = [
+    { area_id: "a1b2c3d4", name: "Woonkamer", floor_id: "begane", icon: "mdi:sofa", picture: null, labels: [], aliases: [] },
+  ];
+  const kmHass: HomeAssistant = {
+    states: {},
+    async callWS<T>(msg: Record<string, unknown>): Promise<T> {
+      switch (msg.type) {
+        case "config/area_registry/list": return kmAreas as unknown as T;
+        case "config/floor_registry/list": return kmFloors as unknown as T;
+        default: return [] as unknown as T;
+      }
+    },
+  };
+
+  // Exact de vorm zoals in het demo-dashboard opgeslagen.
+  const kmConfig = {
+    type: "custom:glowify",
+    options: {
+      rooms: {
+        woonkamer: {
+          extra_sub_buttons: [
+            {
+              entity: "cover.rolluik_slaapkamer",
+              icon: "mdi:window-shutter-open",
+              tap_action: { action: "call-service", service: "cover.open_cover", target: { entity_id: "cover.rolluik_slaapkamer" } },
+            },
+            {
+              entity: "cover.rolluik_slaapkamer",
+              icon: "mdi:window-shutter",
+              tap_action: { action: "call-service", service: "cover.close_cover", target: { entity_id: "cover.rolluik_slaapkamer" } },
+            },
+          ],
+        },
+      },
+    },
+  };
+
+  const res = await GlowifyStrategy.generate(kmConfig, kmHass);
+  const stack = (res.views[0].cards!.find((c: any) => c.type === "vertical-stack") as any);
+  const bar = stack.cards.find((c: any) => c.name === "Woonkamer");
+  ok(Boolean(bar), "Woonkamer-balk bestaat");
+  const services = (bar.sub_button ?? []).map((b: any) => b.tap_action?.service).filter(Boolean);
+  ok(services.includes("cover.open_cover"), "extra sub-knop 'openen' rendert (rooms.woonkamer matcht via naam-slug)");
+  ok(services.includes("cover.close_cover"), "extra sub-knop 'sluiten' rendert");
+  ok((bar.sub_button ?? []).length === 2, "beide extra sub-knopjes staan op de balk, bewerkmodus uit");
+}
+
 async function main(): Promise<void> {
   // Bewerkmodus standaard uit → geen plus/opruim, zuivere sub-knop-volgorde.
   _ls["glowify_edit_mode"] = "0";
@@ -401,6 +462,8 @@ async function main(): Promise<void> {
   ok(exSb[1] === "input_button.kat", "extra sub-knop links van de vaste knopjes");
   ok(exSb[2] === "lock.voordeur" && exSb[3] === "cover.woonkamer_rolluik", "vaste knopjes volgen rechts van de special");
   ok(exWk.styles.includes(".bubble-sub-button-2 { color:"), "special krijgt zijn kleurtaal-styling op de juiste index");
+
+  await keyMatchScenario();
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

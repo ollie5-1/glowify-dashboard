@@ -141,7 +141,9 @@ async function main(): Promise<void> {
   // Bewerkmodus standaard uit → geen plus/opruim, zuivere sub-knop-volgorde.
   _ls["glowify_edit_mode"] = "0";
   const baseOptions: GlowifyStrategyOptions = { title: "Glowify" };
-  const config = { strategy: { type: "custom:glowify", options: baseOptions } };
+  // Exact zoals HA de strategie aanroept: het strategy-config-object zelf,
+  // met de opties op `options` (niet genest onder `strategy`).
+  const config = { type: "custom:glowify", options: baseOptions };
   const result = await GlowifyStrategy.generate(config, hass);
 
   console.log("== Structuur ==");
@@ -291,7 +293,7 @@ async function main(): Promise<void> {
   console.log("== Bewerkmodus AAN (UX-1) ==");
   _ls["glowify_edit_mode"] = "1";
   const res2 = await GlowifyStrategy.generate(
-    { strategy: { options: { title: "Glowify" } } },
+    { type: "custom:glowify", options: { title: "Glowify" } },
     hass,
   );
   const chips2 = (res2.views[0].cards![0] as any).chips;
@@ -351,6 +353,54 @@ async function main(): Promise<void> {
   ok(entityForItem({ action_type: "script", entity: "script.x" }) === undefined, "script-entiteit hangt niet op het item zelf");
   ok(targetFieldFor("room_popup") === "room" && targetFieldFor("navigate") === "path", "doelveld per actietype");
   ok(entityDomainFor("scene") === "scene" && entityDomainFor("toggle") === undefined, "entiteitkiezer-domeinfilter per actietype");
+
+  console.log("== Opties worden echt gelezen (bugfix) ==");
+  // Regressie: HA geeft {type, options}; de opties MOETEN doorwerken.
+  const titled = await GlowifyStrategy.generate(
+    { type: "custom:glowify", options: { title: "Mijn Huis" } },
+    hass,
+  );
+  ok(titled.title === "Mijn Huis", "title-optie uit config.options wordt toegepast");
+  // Legacy generateDashboard: opties genest onder config.strategy.options.
+  const legacy = await GlowifyStrategy.generateDashboard({
+    config: { strategy: { type: "custom:glowify", options: { title: "Legacy Huis" } } },
+    hass,
+  });
+  ok(legacy.title === "Legacy Huis", "legacy generateDashboard leest de opties ook");
+
+  console.log("== extra_chips en extra_sub_buttons in de output (bugfix) ==");
+  _ls["glowify_edit_mode"] = "0";
+  const withExtras = await GlowifyStrategy.generate(
+    {
+      type: "custom:glowify",
+      options: {
+        title: "Glowify",
+        extra_chips: [{ icon: "mdi:cat", icon_color: "purple", content: "Kat" }],
+        rooms: {
+          woonkamer: {
+            extra_sub_buttons: [
+              { entity: "input_button.kat", icon: "mdi:cat", color_when_active: "purple" },
+            ],
+          },
+        },
+      },
+    },
+    hass,
+  );
+  const exChips = (withExtras.views[0].cards![0] as any).chips;
+  const catIdx = exChips.findIndex((c: any) => c.icon === "mdi:cat");
+  const scenesIdx = exChips.findIndex((c: any) => c.content === "Scenes");
+  ok(catIdx > scenesIdx, "extra chip staat achteraan (na de vaste chips)");
+  ok(exChips[catIdx].content === "Kat", "extra chip behoudt zijn inhoud");
+
+  const exStacks = withExtras.views[0].cards!.filter((c: any) => c.type === "vertical-stack");
+  const exWk = (exStacks.find((s: any) => s.cards[0].name === "Gelijkvloers") as any).cards.find((c: any) => c.name === "Woonkamer");
+  const exSb = exWk.sub_button.map((b: any) => b.entity);
+  // Volgorde (bewerkmodus uit): beweging, special, slot, zonwering, licht, licht.
+  ok(exSb[0] === "binary_sensor.woonkamer_beweging", "beweging blijft uiterst links");
+  ok(exSb[1] === "input_button.kat", "extra sub-knop links van de vaste knopjes");
+  ok(exSb[2] === "lock.voordeur" && exSb[3] === "cover.woonkamer_rolluik", "vaste knopjes volgen rechts van de special");
+  ok(exWk.styles.includes(".bubble-sub-button-2 { color:"), "special krijgt zijn kleurtaal-styling op de juiste index");
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

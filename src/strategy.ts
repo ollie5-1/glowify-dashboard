@@ -12,6 +12,14 @@ import type {
 } from "./types/homeassistant";
 import type { GlowifyStrategyOptions } from "./types/options";
 
+/** De strategy-config zoals HA ze aan generate() kan doorgeven. */
+interface StrategyGenerateConfig {
+  type?: string;
+  options?: GlowifyStrategyOptions;
+  strategy?: { options?: GlowifyStrategyOptions };
+  [key: string]: unknown;
+}
+
 /**
  * De Glowify dashboard-strategie.
  *
@@ -19,19 +27,30 @@ import type { GlowifyStrategyOptions } from "./types/options";
  * is de legacy-vorm die HA nog aanroept. Beide leiden naar dezelfde bouwer.
  */
 export class GlowifyStrategy {
-  /** Moderne API (HA 2026.5+). */
+  /**
+   * Moderne API (HA 2026.5+). HA geeft het strategy-config-object zelf door,
+   * dus de opties staan op `config.options`. We accepteren ook de geneste
+   * vorm `config.strategy.options` als extra vangnet.
+   */
   static async generate(
-    config: { strategy?: { options?: GlowifyStrategyOptions } },
+    config: StrategyGenerateConfig,
     hass: HomeAssistant,
   ): Promise<LovelaceConfig> {
-    return GlowifyStrategy.build(hass, config?.strategy?.options);
+    return GlowifyStrategy.build(hass, GlowifyStrategy.extractOptions(config));
   }
 
-  /** Legacy API (achterwaartse compatibiliteit). */
+  /** Legacy API (achterwaartse compatibiliteit). info.config is de volledige config. */
   static async generateDashboard(
     info: DashboardStrategyInfo,
   ): Promise<LovelaceConfig> {
-    return GlowifyStrategy.build(info.hass, info.config?.strategy?.options);
+    return GlowifyStrategy.build(info.hass, GlowifyStrategy.extractOptions(info.config));
+  }
+
+  /** Haalt de opties uit gelijk welke config-vorm die HA kan doorgeven. */
+  private static extractOptions(
+    config: StrategyGenerateConfig | undefined,
+  ): GlowifyStrategyOptions | undefined {
+    return config?.options ?? config?.strategy?.options;
   }
 
   private static async build(

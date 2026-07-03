@@ -68,10 +68,20 @@ const entities: EntityRegistryEntry[] = [
   // Camera + bijhorende instel-switch (moet in pop-up overgeslagen worden — Fase 2).
   ent({ entity_id: "camera.woonkamer_cam", area_id: "woonkamer", device_id: "dev_cam" }),
   ent({ entity_id: "switch.woonkamer_cam_privacy", area_id: "woonkamer", device_id: "dev_cam" }),
+  // Individuele lamp (geen groep) → verschijnt in de pop-up met features op maat.
+  ent({ entity_id: "light.woonkamer_leeslamp", area_id: "woonkamer" }),
+  // Gewone schakelaar → verschijnt; werkregel + verberg → gefilterd.
+  ent({ entity_id: "switch.woonkamer_stopcontact", area_id: "woonkamer" }),
+  ent({ entity_id: "switch.woonkamer_child_lock", area_id: "woonkamer" }),
+  ent({ entity_id: "switch.woonkamer_geheim", area_id: "woonkamer", labels: ["verberg_id"] }),
   // Badkamer: geen temperatuur, wel vocht (terugval) + ventilator + licht.
   ent({ entity_id: "light.verlichting_badkamer", area_id: "badkamer" }),
   ent({ entity_id: "sensor.badkamer_vocht", area_id: "badkamer", device_class: "humidity" }),
   ent({ entity_id: "fan.badkamer_ventilatie", area_id: "badkamer" }),
+];
+
+const labels: LabelRegistryEntry[] = [
+  { label_id: "verberg_id", name: "verberg", color: null, icon: null, description: null },
 ];
 
 const states: Record<string, HassEntity> = {};
@@ -82,6 +92,7 @@ for (const e of entities) {
     attributes: e.entity_id === "light.verlichting_woonkamer" ? { rgb_color: [255, 180, 80] } : {},
   };
 }
+states["light.woonkamer_leeslamp"].attributes.supported_color_modes = ["color_temp", "rgb"];
 
 const hass: HomeAssistant = {
   states,
@@ -91,7 +102,7 @@ const hass: HomeAssistant = {
       case "config/floor_registry/list": return floors as unknown as T;
       case "config/device_registry/list": return devices as unknown as T;
       case "config/entity_registry/list": return entities as unknown as T;
-      case "config/label_registry/list": return [] as unknown as LabelRegistryEntry[] as unknown as T;
+      case "config/label_registry/list": return labels as unknown as T;
       default: return [] as unknown as T;
     }
   },
@@ -153,6 +164,32 @@ async function main(): Promise<void> {
   const berging = beganeStack.cards.find((c: any) => c.name === "Berging");
   ok(berging.button_type === "name", "berging zonder status = name-type");
   ok(berging.sub_button === undefined, "berging zonder sub-knopjes");
+
+  console.log("== Kamer-pop-up Woonkamer (Fase 2) ==");
+  const popup = cards.find((c: any) => c.card_type === "pop-up" && c.hash === "#woonkamer") as any;
+  ok(Boolean(popup), "pop-up met hash #woonkamer bestaat");
+  const pc: any[] = popup.cards;
+  const titles = pc.filter((c) => c.type === "custom:mushroom-title-card").map((c) => c.subtitle);
+  ok(titles[0] === "Camera", "camera-sectie staat bovenaan");
+  const cam = pc.find((c) => c.type === "picture-entity");
+  ok(cam?.entity === "camera.woonkamer_cam" && cam.camera_view === "live", "camera als live picture-entity");
+  ok(pc.some((c) => c.type === "custom:mushroom-cover-card" && c.entity === "cover.woonkamer_rolluik"), "zonwering-kaart");
+  ok(pc.some((c) => c.type === "custom:mushroom-lock-card" && c.entity === "lock.voordeur"), "slot-kaart");
+
+  const leeslamp = pc.find((c) => c.type === "tile" && c.entity === "light.woonkamer_leeslamp");
+  ok(Boolean(leeslamp), "individuele lamp verschijnt");
+  const featTypes = (leeslamp?.features ?? []).map((f: any) => f.type);
+  ok(
+    featTypes.includes("light-brightness") && featTypes.includes("light-color-temp") && featTypes.includes("light-color-favorites"),
+    "tile-features op maat van de lamp (helderheid + kleurtemp + kleur)",
+  );
+
+  const popupEntities = JSON.stringify(pc);
+  ok(!popupEntities.includes("light.verlichting_woonkamer"), "lichtgroep zelf niet in de pop-up");
+  ok(!popupEntities.includes("switch.woonkamer_cam_privacy"), "camera-instelschakelaar overgeslagen");
+  ok(!popupEntities.includes("switch.woonkamer_child_lock"), "werkregel (child_lock) gefilterd");
+  ok(!popupEntities.includes("switch.woonkamer_geheim"), "label 'verberg' gefilterd");
+  ok(popupEntities.includes("switch.woonkamer_stopcontact"), "gewone schakelaar verschijnt wel");
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

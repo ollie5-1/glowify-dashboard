@@ -3,6 +3,7 @@ import type { FloorModel } from "../model/floorModel";
 import { detectRoomEntities } from "../model/roomEntities";
 import { buildChipsCard } from "../cards/chips";
 import { buildRoomBar } from "../cards/roomBar";
+import { buildRoomPopup } from "../cards/roomPopup";
 import type { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant";
 
 /**
@@ -41,6 +42,13 @@ export function buildHomeView(
   // Chips-rij vooraan (heeft de verzamelde lichtgroepen nodig).
   cards.push(buildChipsCard(reg, lightGroups));
   cards.push(...floorBlocks);
+
+  // Kamer-pop-ups achteraan (één per kamer, aangesproken via de hash).
+  for (const floor of floors) {
+    for (const room of floor.rooms) {
+      cards.push(buildRoomPopup(reg, room));
+    }
+  }
 
   return {
     title: reg.options.title ?? "Thuis",

@@ -1,11 +1,10 @@
 import { GlowifyRegistry } from "./registry";
-import { buildFloorModel, type FloorModel } from "./model/floorModel";
+import { buildFloorModel } from "./model/floorModel";
+import { buildHomeView } from "./views/homeView";
 import type {
   DashboardStrategyInfo,
   HomeAssistant,
-  LovelaceCardConfig,
   LovelaceConfig,
-  LovelaceViewConfig,
 } from "./types/homeassistant";
 import type { GlowifyStrategyOptions } from "./types/options";
 
@@ -37,58 +36,11 @@ export class GlowifyStrategy {
   ): Promise<LovelaceConfig> {
     const reg = await GlowifyRegistry.create(hass, rawOptions);
     const floors = buildFloorModel(reg);
-
-    const homeView = GlowifyStrategy.buildHomeView(reg, floors);
+    const homeView = buildHomeView(reg, floors);
 
     return {
       title: reg.options.title ?? "Glowify",
       views: [homeView],
-    };
-  }
-
-  /**
-   * Fase 0-skeleton: bewijst end-to-end werking (registratie → registries
-   * → floors → rendering). De kamerbalken komen in Fase 1.
-   */
-  private static buildHomeView(
-    reg: GlowifyRegistry,
-    floors: FloorModel[],
-  ): LovelaceViewConfig {
-    const cards: LovelaceCardConfig[] = [];
-
-    const roomCount = floors.reduce((n, f) => n + f.rooms.length, 0);
-    cards.push({
-      type: "markdown",
-      content: [
-        "## 🌟 Glowify Dashboard",
-        "",
-        `De strategie draait. Gevonden: **${floors.length}** verdieping(en), **${roomCount}** kamer(s).`,
-        "",
-        "_Fase 0-skeleton — de kamerbalken volgen in Fase 1._",
-      ].join("\n"),
-    });
-
-    for (const floor of floors) {
-      cards.push({
-        type: "custom:bubble-card",
-        card_type: "separator",
-        name: floor.name,
-        icon: floor.icon,
-      });
-      cards.push({
-        type: "markdown",
-        content: floor.rooms
-          .map((r) => `- ${r.icon ? "" : ""}**${r.name}** \`#${r.areaId}\``)
-          .join("\n"),
-      });
-    }
-
-    return {
-      title: reg.options.title ?? "Thuis",
-      path: "glowify-thuis",
-      icon: "mdi:home-heart",
-      badges: [],
-      cards,
     };
   }
 }

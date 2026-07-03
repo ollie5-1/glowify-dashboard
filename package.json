@@ -12,7 +12,8 @@
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
     "watch": "webpack --mode development --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.test.json && node build-test/test/smoke.js"
   },
   "dependencies": {
     "deepmerge": "^4.3.1"

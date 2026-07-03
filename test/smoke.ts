@@ -5,6 +5,14 @@
  */
 import { GlowifyStrategy } from "../src/strategy";
 import { addExtraChip, addExtraSubButton, toggleVerbergLabel } from "../src/features/pure";
+import {
+  buildAction,
+  buildChipItem,
+  buildSubItem,
+  entityDomainFor,
+  entityForItem,
+  targetFieldFor,
+} from "../src/features/editorLogic";
 import type { GlowifyStrategyOptions } from "../src/types/options";
 import type {
   AreaRegistryEntry,
@@ -300,6 +308,36 @@ async function main(): Promise<void> {
   // Beweging is nu doorgeschoven naar index 2 (achter de plus).
   ok(wk2.styles.includes(".bubble-sub-button-2 { display:"), "styles-indices verschuiven correct mee met de plus");
   _ls["glowify_edit_mode"] = "0";
+
+  console.log("== Editor-dialoog logica (UX-2) ==");
+  ok(
+    JSON.stringify(buildAction({ action_type: "room_popup", room: "keuken" })) ===
+      '{"action":"navigate","navigation_path":"#keuken"}',
+    "room_popup → navigeer naar #kamer",
+  );
+  ok(buildAction({ action_type: "toggle" }).action === "toggle", "toggle → toggle-actie");
+  ok(
+    JSON.stringify(buildAction({ action_type: "script", entity: "script.foo" })) ===
+      '{"action":"call-service","service":"script.foo"}',
+    "script → roept het script als dienst aan",
+  );
+  const sceneAct = buildAction({ action_type: "scene", entity: "scene.avond" });
+  ok(
+    sceneAct.service === "scene.turn_on" && (sceneAct as any).target.entity_id === "scene.avond",
+    "scene → scene.turn_on met de scene",
+  );
+  ok(buildAction({ action_type: "cover_open", entity: "cover.x" }).service === "cover.open_cover", "zonwering openen");
+  ok(buildAction({ action_type: "cover_close", entity: "cover.x" }).service === "cover.close_cover", "zonwering sluiten");
+  ok(buildAction({ action_type: "more_info" }).action === "more-info", "more-info-actie");
+  ok(buildAction({ action_type: "navigate", path: "/lovelace/0" }).navigation_path === "/lovelace/0", "navigeer naar eigen pad");
+
+  const chipItem = buildChipItem({ action_type: "toggle", entity: "light.x", icon: "mdi:lamp", color: "orange", text: "Licht" });
+  ok(chipItem.entity === "light.x" && chipItem.icon_color === "orange" && chipItem.content === "Licht", "chip krijgt entiteit, kleur en tekst");
+  const subItem = buildSubItem({ action_type: "toggle", entity: "fan.x", icon: "mdi:fan", color: "blue" });
+  ok(subItem.entity === "fan.x" && subItem.color_when_active === "rgb(76, 128, 201)", "sub-knop krijgt entiteit en kleurtaal-rgb");
+  ok(entityForItem({ action_type: "script", entity: "script.x" }) === undefined, "script-entiteit hangt niet op het item zelf");
+  ok(targetFieldFor("room_popup") === "room" && targetFieldFor("navigate") === "path", "doelveld per actietype");
+  ok(entityDomainFor("scene") === "scene" && entityDomainFor("toggle") === undefined, "entiteitkiezer-domeinfilter per actietype");
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

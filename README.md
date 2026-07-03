@@ -92,9 +92,11 @@ strategy:
   verschijnen de plusjes op de kamerbalken en de plus- en opruim-chip. De stand
   wordt per browser onthouden (localStorage).
 - **Plusknop-editor** — een plusje in de chips-rij en op elke kamerbalk opent
-  een dialoog (icoon, kleur, tekst, actie). De toevoeging wordt via de
-  lovelace-API in de strategie-opties bewaard, waarna het dashboard zichzelf
-  vernieuwt.
+  een dialoog met de native HA-componenten: een echte entiteitenkiezer (met
+  zoek), een icoonkiezer, een Glowify-kleurkeuze en een actiekeuzelijst
+  (kamer-pop-up, aan/uit, script, scene, more-info, zonwering, eigen pad), met
+  een live voorbeeld van het knopje. De toevoeging wordt via de lovelace-API in
+  de strategie-opties bewaard, waarna het dashboard zichzelf vernieuwt.
 - **Opruimmodus** — het bezem-chip opent een beheerlijst waarin je elk toestel
   het label `verberg` geeft (of terugdraait) via de websocket-API. Verborgen
   toestellen verdwijnen overal uit het dashboard.

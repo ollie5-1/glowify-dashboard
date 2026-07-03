@@ -10,7 +10,8 @@ import {
   motionStyle,
   specialColorStyle,
 } from "../kleurtaal";
-import { lightOffAction, lightTriggerAction } from "./lightAction";
+import { lightOffAction } from "./lightAction";
+import { buildLightPanelAction } from "../scenes";
 import type { LovelaceCardConfig } from "../types/homeassistant";
 
 interface SubButton {
@@ -103,7 +104,7 @@ export function buildRoomBar(
     subButtons.push({
       entity: ent.lightGroup,
       icon: "mdi:lightbulb",
-      tap_action: lightTriggerAction(ent.lightGroup),
+      tap_action: buildLightPanelAction(ent.lightGroup, room.name),
       hold_action: { action: "more-info" },
     });
     const offCss = subButtons.length + 1;

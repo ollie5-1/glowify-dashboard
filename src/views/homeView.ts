@@ -4,6 +4,7 @@ import { detectRoomEntities } from "../model/roomEntities";
 import { buildChipsCard } from "../cards/chips";
 import { buildRoomBar } from "../cards/roomBar";
 import { buildRoomPopup } from "../cards/roomPopup";
+import { buildSceneSettingsPopup } from "../scenes";
 import type { LovelaceCardConfig, LovelaceViewConfig } from "../types/homeassistant";
 
 /**
@@ -49,6 +50,9 @@ export function buildHomeView(
       cards.push(buildRoomPopup(reg, room));
     }
   }
+
+  // Scene-instellingen pop-up (aangesproken door de Scenes-chip).
+  cards.push(buildSceneSettingsPopup(reg));
 
   return {
     title: reg.options.title ?? "Thuis",

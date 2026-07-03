@@ -93,6 +93,13 @@ for (const e of entities) {
   };
 }
 states["light.woonkamer_leeslamp"].attributes.supported_color_modes = ["color_temp", "rgb"];
+// Scene-schuifjes aanwezig maken (Fase 3).
+for (const scene of ["gezellig", "relax", "normaal", "fel"]) {
+  for (const veld of ["helderheid", "kleurtemperatuur"]) {
+    const id = `input_number.glowify_${scene}_${veld}`;
+    states[id] = { entity_id: id, state: "50", attributes: {} };
+  }
+}
 
 const hass: HomeAssistant = {
   states,
@@ -190,6 +197,38 @@ async function main(): Promise<void> {
   ok(!popupEntities.includes("switch.woonkamer_child_lock"), "werkregel (child_lock) gefilterd");
   ok(!popupEntities.includes("switch.woonkamer_geheim"), "label 'verberg' gefilterd");
   ok(popupEntities.includes("switch.woonkamer_stopcontact"), "gewone schakelaar verschijnt wel");
+
+  console.log("== Snelpaneel + scenes (Fase 3) ==");
+  const lightTrigger = woonkamer.sub_button.find((b: any) => b.icon === "mdi:lightbulb");
+  const trigTap = lightTrigger.tap_action;
+  ok(trigTap.action === "fire-dom-event", "licht-trigger is fire-dom-event");
+  ok(trigTap.browser_mod?.service === "browser_mod.sequence", "roept browser_mod.sequence aan");
+  const seq: any[] = trigTap.browser_mod.data.sequence;
+  ok(seq[0].service === "light.turn_on" && seq[0].data.entity_id === "light.verlichting_woonkamer", "eerst licht aan");
+  const popupStep = seq[1];
+  ok(popupStep.service === "browser_mod.popup" && popupStep.data.timeout === 13000, "pop-up van 13 seconden");
+  const panelCards: any[] = popupStep.data.content.cards;
+  const panelTile = panelCards.find((c) => c.type === "tile");
+  ok((panelTile?.features ?? []).length === 3, "drie lichtregelaars in het paneel");
+  const sceneChips = panelCards.find((c) => c.type === "custom:mushroom-chips-card")?.chips ?? [];
+  ok(sceneChips.length === 4, "vier scenechips");
+  ok(
+    sceneChips.map((c: any) => c.content).join(",") === "Gezellig,Relax,Normaal,Fel",
+    "scenes: Gezellig, Relax, Normaal, Fel",
+  );
+  ok(
+    sceneChips.every((c: any) => c.tap_action.service.startsWith("script.glowify_scene_")),
+    "scenechips roepen script.glowify_scene_* aan",
+  );
+  ok(
+    sceneChips.every((c: any) => c.tap_action.data.doelgroep === "light.verlichting_woonkamer"),
+    "doelgroep gevuld met de lichtgroep van de kamer",
+  );
+
+  const instel = cards.find((c: any) => c.card_type === "pop-up" && c.hash === "#instellingen") as any;
+  ok(Boolean(instel), "scene-instellingen pop-up bestaat");
+  const instelEntities = instel.cards[0].entities;
+  ok(instelEntities?.length === 8, "acht scene-schuifjes in de instellingen");
 
   console.log(failures === 0 ? "\nALLE CHECKS GESLAAGD" : `\n${failures} CHECK(S) GEFAALD`);
   process.exit(failures === 0 ? 0 : 1);

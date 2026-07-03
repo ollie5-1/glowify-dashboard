@@ -1,11 +1,14 @@
 import { GlowifyRegistry } from "./registry";
 import { buildFloorModel } from "./model/floorModel";
 import { buildHomeView } from "./views/homeView";
+import { buildRoomSubview } from "./views/roomSubview";
 import { isEditMode } from "./features/editMode";
+import { getDashboardBasePath } from "./features/lovelaceApi";
 import type {
   DashboardStrategyInfo,
   HomeAssistant,
   LovelaceConfig,
+  LovelaceViewConfig,
 } from "./types/homeassistant";
 import type { GlowifyStrategyOptions } from "./types/options";
 
@@ -37,11 +40,20 @@ export class GlowifyStrategy {
   ): Promise<LovelaceConfig> {
     const reg = await GlowifyRegistry.create(hass, rawOptions);
     const floors = buildFloorModel(reg);
-    const homeView = buildHomeView(reg, floors, isEditMode());
+    const basePath = getDashboardBasePath();
+    const homeView = buildHomeView(reg, floors, isEditMode(), basePath);
+
+    // Per kamer een subview (lang indrukken op de kamerbalk).
+    const subviews: LovelaceViewConfig[] = [];
+    for (const floor of floors) {
+      for (const room of floor.rooms) {
+        subviews.push(buildRoomSubview(reg, room));
+      }
+    }
 
     return {
       title: reg.options.title ?? "Glowify",
-      views: [homeView],
+      views: [homeView, ...subviews],
     };
   }
 }

@@ -116,3 +116,13 @@ export function setEntityLabels(
 export function reloadDashboard(): void {
   window.location.reload();
 }
+
+/**
+ * Het basispad van het huidige dashboard (het eerste URL-segment), voor het
+ * bouwen van absolute navigatiepaden naar subviews. Buiten de browser (tests)
+ * valt het terug op "lovelace".
+ */
+export function getDashboardBasePath(): string {
+  if (typeof window === "undefined") return "lovelace";
+  return window.location.pathname.split("/").filter(Boolean)[0] ?? "lovelace";
+}

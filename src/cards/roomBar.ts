@@ -38,6 +38,7 @@ export function buildRoomBar(
   reg: GlowifyRegistry,
   room: RoomModel,
   editMode: boolean,
+  basePath: string,
   detected?: RoomEntities,
 ): LovelaceCardConfig {
   const ent = detected ?? detectRoomEntities(reg, room);
@@ -125,8 +126,9 @@ export function buildRoomBar(
     styleLines.push(lightStyle(ent.lightGroup, triggerCss, offCss));
   }
 
-  // Navigatie: tik opent de pop-up van deze kamer.
-  const nav = { action: "navigate", navigation_path: `#${room.areaId}` };
+  // Navigatie: tik opent de pop-up, lang indrukken opent de kamerpagina.
+  const tapNav = { action: "navigate", navigation_path: `#${room.areaId}` };
+  const holdNav = { action: "navigate", navigation_path: `/${basePath}/${room.areaId}` };
 
   const bar: LovelaceCardConfig = {
     type: "custom:bubble-card",
@@ -134,9 +136,9 @@ export function buildRoomBar(
     button_type: ent.statusSensor ? "state" : "name",
     name: room.name,
     icon: room.icon ?? "mdi:home-outline",
-    tap_action: nav,
-    hold_action: nav,
-    button_action: { tap_action: nav, hold_action: nav },
+    tap_action: tapNav,
+    hold_action: holdNav,
+    button_action: { tap_action: tapNav, hold_action: holdNav },
   };
 
   if (ent.statusSensor) {

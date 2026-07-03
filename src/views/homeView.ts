@@ -17,6 +17,7 @@ export function buildHomeView(
   reg: GlowifyRegistry,
   floors: FloorModel[],
   editMode: boolean,
+  basePath: string,
 ): LovelaceViewConfig {
   const cards: LovelaceCardConfig[] = [];
   const lightGroups: string[] = [];
@@ -36,7 +37,7 @@ export function buildHomeView(
     for (const room of floor.rooms) {
       const ent = detectRoomEntities(reg, room);
       if (ent.lightGroup) lightGroups.push(ent.lightGroup);
-      stack.push(buildRoomBar(reg, room, editMode, ent));
+      stack.push(buildRoomBar(reg, room, editMode, basePath, ent));
     }
     floorBlocks.push({ type: "vertical-stack", cards: stack });
   }

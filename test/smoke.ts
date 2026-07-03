@@ -145,9 +145,9 @@ async function main(): Promise<void> {
   const result = await GlowifyStrategy.generate(config, hass);
 
   console.log("== Structuur ==");
-  ok(result.views.length === 1, "één view gegenereerd");
+  ok(result.views.length >= 1, "views gegenereerd");
   const view = result.views[0];
-  ok(view.path === "glowify-thuis", "view path = glowify-thuis");
+  ok(view.path === "glowify-thuis", "eerste view path = glowify-thuis");
   const cards = view.cards ?? [];
   ok(cards[0]?.type === "custom:mushroom-chips-card", "eerste kaart is de chips-rij");
 
@@ -265,6 +265,19 @@ async function main(): Promise<void> {
   ok(JSON.stringify(o2).length > 0 && o2.rooms?.zolder?.extra_sub_buttons?.length === 1, "originele opties onaangetast (immutabel)");
   ok(JSON.stringify(toggleVerbergLabel(["x"], "vb", true)) === '["x","vb"]', "verberg-label toevoegen");
   ok(JSON.stringify(toggleVerbergLabel(["x", "vb"], "vb", false)) === '["x"]', "verberg-label verwijderen");
+
+  console.log("== Per-kamer subviews (Fase 5) ==");
+  const subviews = result.views.filter((v: any) => v.subview === true);
+  ok(subviews.length === 3, "één subview per kamer (woonkamer, badkamer, berging)");
+  const wkSub = subviews.find((v: any) => v.path === "woonkamer") as any;
+  ok(Boolean(wkSub) && wkSub.title === "Woonkamer", "subview met path=woonkamer en juiste titel");
+  ok(wkSub.cards.some((c: any) => c.type === "picture-entity"), "subview toont dezelfde domeininhoud (camera)");
+  ok(
+    woonkamer.hold_action.navigation_path === "/lovelace/woonkamer",
+    "lang indrukken navigeert naar de kamerpagina",
+  );
+  const bergingSub = subviews.find((v: any) => v.path === "berging") as any;
+  ok(bergingSub.cards[0].type === "markdown", "lege kamer krijgt een nette placeholder");
 
   console.log("== Bewerkmodus UIT (UX-1) ==");
   const chips1 = (cards[0] as any).chips;

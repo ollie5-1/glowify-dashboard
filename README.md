@@ -49,6 +49,9 @@ strategy:
 De strategie leest je woning en bouwt de rest zelf op. Zie
 [Opties](#opties) voor de fijnafstelling.
 
+**Bediening:** tik op een kamerbalk voor de pop-up, **lang indrukken** voor de
+volledige kamerpagina (subview).
+
 ## Opties
 
 Alle opties zijn optioneel; standaard werkt de strategie zonder configuratie.

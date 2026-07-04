@@ -1,3 +1,4 @@
+import deepmerge from "deepmerge";
 import { GlowifyRegistry } from "./registry";
 import { buildFloorModel } from "./model/floorModel";
 import { buildHomeView } from "./views/homeView";
@@ -13,6 +14,12 @@ import type {
   LovelaceViewConfig,
 } from "./types/homeassistant";
 import type { GlowifyStrategyOptions } from "./types/options";
+
+/**
+ * Sleutels die géén Glowify-optie zijn maar de config-structuur vormen; die
+ * horen niet mee in de afgeplatte optie-extractie.
+ */
+const STRUCTURAL_KEYS = new Set(["type", "options", "strategy", "hass", "config", "views"]);
 
 /** De strategy-config zoals HA ze aan generate() kan doorgeven. */
 interface StrategyGenerateConfig {
@@ -54,20 +61,50 @@ export class GlowifyStrategy {
   }
 
   /**
-   * Haalt de opties uit gelijk welke config-vorm die HA kan doorgeven:
-   *  - modern: het strategy-object zelf → `config.options`
-   *  - vol dashboard: `config.strategy.options`
-   *  - info-vorm: `config.config.(strategy.)options`
+   * Haalt de opties vorm-onafhankelijk uit de config. HA geeft de opties in
+   * de praktijk AFGEPLAT door: `generate({type, ...opties}, hass)` — dus zonder
+   * `options`-sleutel (bevestigd via de entrypoint-diagnostiek). We mergen over
+   * de drie mogelijke bronnen, in oplopende voorrang zodat de afgeplatte vorm
+   * wint:
+   *   (3) legacy genest: config.strategy.options (of via config.config)
+   *   (2) modern genest: config.options
+   *   (1) afgeplat: alle top-level sleutels behalve de structurele
    */
   private static extractOptions(
     config: StrategyGenerateConfig | undefined,
   ): GlowifyStrategyOptions | undefined {
-    if (!config) return undefined;
-    return (
-      config.options ??
+    if (!config || typeof config !== "object") return undefined;
+
+    const sources: GlowifyStrategyOptions[] = [];
+
+    // (3) legacy genest — laagste voorrang.
+    const legacy =
       config.strategy?.options ??
-      config.config?.options ??
-      config.config?.strategy?.options
+      config.config?.strategy?.options ??
+      config.config?.options;
+    if (legacy && typeof legacy === "object") sources.push(legacy);
+
+    // (2) modern genest onder options.
+    if (config.options && typeof config.options === "object") {
+      sources.push(config.options);
+    }
+
+    // (1) afgeplatte top-level sleutels (de vorm die HA werkelijk gebruikt),
+    //     behalve de structurele sleutels — hoogste voorrang.
+    const flat: Record<string, unknown> = {};
+    let hasFlat = false;
+    for (const key of Object.keys(config)) {
+      if (STRUCTURAL_KEYS.has(key)) continue;
+      flat[key] = (config as Record<string, unknown>)[key];
+      hasFlat = true;
+    }
+    if (hasFlat) sources.push(flat as GlowifyStrategyOptions);
+
+    if (sources.length === 0) return undefined;
+    // Merge met stijgende voorrang: latere bron overschrijft de vorige.
+    return sources.reduce(
+      (acc, src) => deepmerge(acc, src) as GlowifyStrategyOptions,
+      {} as GlowifyStrategyOptions,
     );
   }
 

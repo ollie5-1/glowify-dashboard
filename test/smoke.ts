@@ -289,6 +289,59 @@ async function indexShiftScenario(): Promise<void> {
   );
 }
 
+/**
+ * Gebruikt de LETTERLIJKE afgeplatte config-vorm uit de demo-console
+ * ({type, debug, rooms}) — zonder options-sleutel — en verifieert dat de
+ * opties tóch doorkomen: debug logt en de extra_sub_buttons renderen.
+ */
+async function flattenedFormScenario(): Promise<void> {
+  console.log("== Afgeplatte HA-config-vorm (Fase 14) ==");
+  _ls["glowify_edit_mode"] = "0";
+
+  // Exact zoals HA aanroept: opties afgeplat op top-level, geen options-sleutel.
+  const flatConfig = {
+    type: "custom:glowify",
+    debug: true,
+    rooms: {
+      woonkamer: {
+        extra_sub_buttons: [
+          { entity: "cover.rolluik_slaapkamer", icon: "mdi:window-shutter-open", tap_action: { action: "call-service", service: "cover.open_cover", target: { entity_id: "cover.rolluik_slaapkamer" } } },
+          { entity: "cover.rolluik_slaapkamer", icon: "mdi:window-shutter", tap_action: { action: "call-service", service: "cover.close_cover", target: { entity_id: "cover.rolluik_slaapkamer" } } },
+        ],
+      },
+    },
+  };
+
+  // Console.log opvangen om te bewijzen dat debug:true werkt.
+  const logs: string[] = [];
+  const orig = console.log;
+  console.log = (...a: unknown[]) => {
+    logs.push(a.map((x) => (typeof x === "string" ? x : JSON.stringify(x))).join(" "));
+  };
+  let res;
+  try {
+    res = await GlowifyStrategy.generate(flatConfig, hass);
+  } finally {
+    console.log = orig;
+  }
+
+  ok(
+    logs.some((l) => l.includes("Kamerbalk") && l.includes("Woonkamer")),
+    "debug:true uit de afgeplatte vorm werkt (kamerbalk wordt gelogd)",
+  );
+
+  const stacks = res.views[0].cards!.filter((c: any) => c.type === "vertical-stack");
+  let bar: any;
+  for (const s of stacks as any[]) {
+    const b = s.cards.find((c: any) => c.name === "Woonkamer");
+    if (b) bar = b;
+  }
+  ok(Boolean(bar), "Woonkamer-balk bestaat");
+  const services = (bar.sub_button ?? []).map((b: any) => b.tap_action?.service).filter(Boolean);
+  ok(services.includes("cover.open_cover"), "extra sub-knop 'openen' rendert uit de afgeplatte vorm");
+  ok(services.includes("cover.close_cover"), "extra sub-knop 'sluiten' rendert uit de afgeplatte vorm");
+}
+
 async function main(): Promise<void> {
   // Bewerkmodus standaard uit → geen plus/opruim, zuivere sub-knop-volgorde.
   _ls["glowify_edit_mode"] = "0";
@@ -584,6 +637,7 @@ async function main(): Promise<void> {
 
   await keyMatchScenario();
   await indexShiftScenario();
+  await flattenedFormScenario();
 
   console.log("== Diagnostiek jsonSafe (Fase 13) ==");
   const safe = jsonSafe(

@@ -1,10 +1,13 @@
 name: Validate
 
-# Bouwt en test bij elke push/PR, en valideert de HACS-verpakking.
+# Bouwt en test bij elke push/PR. De HACS-verpakking wordt enkel gevalideerd
+# op gepubliceerde releases en wekelijks, zodat elke gewone main-push groen is.
 on:
   push:
     branches: ["**"]
   pull_request:
+  release:
+    types: [published]
   schedule:
     - cron: "0 6 * * 1"
 
@@ -23,6 +26,9 @@ jobs:
       - run: npm run build
 
   hacs:
+    # Draait enkel op gepubliceerde releases en het wekelijkse schema, niet op
+    # gewone pushes/PR's (waar er nog geen release-asset bestaat om te checken).
+    if: github.event_name == 'release' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

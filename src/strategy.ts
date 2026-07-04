@@ -6,7 +6,7 @@ import { buildDomainViews } from "./views/domainViews";
 import { buildRoomSubview } from "./views/roomSubview";
 import { isEditMode } from "./features/editMode";
 import { getDashboardBasePath } from "./features/lovelaceApi";
-import { debugHeader, diagnoseEntrypoint, safeClone } from "./debug";
+import { debugHeader, safeClone } from "./debug";
 import type {
   DashboardStrategyInfo,
   HomeAssistant,
@@ -47,7 +47,6 @@ export class GlowifyStrategy {
     config: StrategyGenerateConfig,
     hass: HomeAssistant,
   ): Promise<LovelaceConfig> {
-    diagnoseEntrypoint("generate(config, hass)", [config, hass]);
     const realHass = hass ?? config?.hass ?? config?.config?.hass;
     return GlowifyStrategy.build(realHass, GlowifyStrategy.extractOptions(config));
   }
@@ -56,7 +55,6 @@ export class GlowifyStrategy {
   static async generateDashboard(
     info: DashboardStrategyInfo,
   ): Promise<LovelaceConfig> {
-    diagnoseEntrypoint("generateDashboard(info)", [info]);
     return GlowifyStrategy.build(info.hass, GlowifyStrategy.extractOptions(info.config));
   }
 

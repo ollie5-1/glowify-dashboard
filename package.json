@@ -1,6 +1,6 @@
 {
   "name": "glowify-dashboard",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "Glowify Dashboard — een custom Home Assistant dashboard-strategie van Glowify die de Thuis-view, kamerbalken en pop-ups dynamisch genereert uit Areas, floors en entiteiten.",
   "author": "Glowify",
   "license": "MIT",

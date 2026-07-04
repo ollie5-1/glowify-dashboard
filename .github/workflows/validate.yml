@@ -10,6 +10,7 @@ on:
     types: [published]
   schedule:
     - cron: "0 6 * * 1"
+  workflow_dispatch: # handmatig te starten via Actions → Run workflow
 
 jobs:
   build:
@@ -26,9 +27,13 @@ jobs:
       - run: npm run build
 
   hacs:
-    # Draait enkel op gepubliceerde releases en het wekelijkse schema, niet op
-    # gewone pushes/PR's (waar er nog geen release-asset bestaat om te checken).
-    if: github.event_name == 'release' || github.event_name == 'schedule'
+    # Draait op gepubliceerde releases, het wekelijkse schema en handmatig
+    # (workflow_dispatch); niet op gewone pushes/PR's (waar er nog geen
+    # release-asset bestaat om te checken).
+    if: >-
+      github.event_name == 'release' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

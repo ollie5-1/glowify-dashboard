@@ -1,5 +1,9 @@
 # Glowify Dashboard
 
+![Glowify Dashboard](docs/screenshot.png)
+
+_Het Glowify-dashboard: Thuis-view met verdiepingsblokken en interactieve kamerbalken._
+
 Een custom **Home Assistant dashboard-strategie** van Glowify. Ze genereert
 automatisch een merkgetrouw dashboard — Thuis-view met verdiepingsblokken,
 interactieve kamerbalken, zelfvullende kamer-pop-ups, snelpanelen en de

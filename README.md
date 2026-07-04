@@ -9,9 +9,26 @@ Waar de vroegere aanpak een handgeschreven YAML-sjabloon per woning vroeg,
 bouwt deze strategie alles dynamisch op. Elk nieuw toestel in de juiste Area
 verschijnt vanzelf.
 
-> Status: **volledig** — Thuis-view en kamerbalken (Fase 1), zelfvullende
-> kamer-pop-ups (Fase 2), snelpanelen en scenes (Fase 3), plusknop-editor,
-> opruimmodus en optieschema (Fase 4).
+## Features
+
+- **Thuis-view** met verdiepingsblokken (HA-floors, of een handmatige indeling)
+  en per kamer een **Bubble Card kamerbalk** met temperatuur als status (terugval
+  op luchtvochtigheid).
+- **Dynamische kleurtaal** op de sub-knopjes: het lampje kleurt mee met de lamp,
+  slot groen/rood, zonwering oranje, ventilator blauw, beweging enkel zichtbaar
+  bij beweging.
+- **Zelfvullende kamer-pop-ups** per domein (camera live, verlichting, zonwering,
+  ventilatie, schakelaars, sloten, verwarming, media) — native, geen auto-entities.
+- **Domein-tabbladen**: Lampen, Ventilatie, Zonwering, Schakelaars, Sloten.
+- **Per-kamer pagina's** (subview) via lang indrukken op een kamerbalk.
+- **Snelpanelen** (browser_mod): tik op het lampje bij licht uit → licht aan + een
+  pop-up van 13 s met drie regelaars en vier scenechips (Gezellig/Relax/Normaal/Fel).
+- **Bewerkmodus** met een subtiel potlood-chipje (standaard uit, onthouden per
+  browser).
+- **Plusknop-editor** met native HA-kiezers en een live voorbeeld.
+- **Opruimmodus**: verberg overbodige toestellen via het label `verberg`.
+- **Rommelfilter**: werkregelpatronen, camera-instelschakelaars, groepsentiteiten
+  en `verberg`-toestellen blijven overal weg.
 
 ## Vereisten
 
@@ -38,10 +55,16 @@ De meegeleverde bestanden:
 
 ## Installatie via HACS
 
-1. HACS → drie puntjes → **Custom repositories**.
-2. Repository: `https://github.com/Glowify/glowify-dashboard`, type **Dashboard**.
-3. Zoek **Glowify Dashboard** in HACS en download.
-4. Herstart / ververs de browser (harde refresh, zie de werkregels).
+1. Open **HACS** → rechtsboven de drie puntjes → **Custom repositories**.
+2. Repository: `https://github.com/ollie5-1/glowify-dashboard`, type **Dashboard**.
+   Klik **Add**.
+3. Zoek **Glowify Dashboard** in de HACS-lijst, open het en klik **Download**.
+4. Ververs hard: F12 → Network → *Disable cache* aan → twee keer F5 → vinkje uit.
+5. Voeg het dashboard toe: **Instellingen → Dashboards → Dashboard toevoegen →
+   Communitydashboards → Glowify Dashboard**.
+
+> HACS installeert het bestand `glowify-dashboard.js` uit de nieuwste **release**
+> (gepubliceerd door de release-workflow) en registreert het als frontend-resource.
 
 ## Dashboard toevoegen
 

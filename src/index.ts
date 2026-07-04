@@ -84,7 +84,7 @@ if (!window.customStrategies.some((s) => s.type === STRATEGY_TYPE)) {
     name: "Glowify Dashboard",
     description:
       "Genereert automatisch een Glowify Thuis-view, kamerbalken en pop-ups uit je Areas, floors en entiteiten.",
-    documentationURL: "https://github.com/Glowify/glowify-dashboard",
+    documentationURL: "https://github.com/ollie5-1/glowify-dashboard",
   });
 }
 
